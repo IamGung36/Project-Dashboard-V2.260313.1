@@ -258,6 +258,7 @@ const DEFAULT_DB = {
 class LocalDatabase {
   constructor() {
     this.data = null;
+    this.lastSaveTime = 0;
     this.init();
     this.startRealtimeSync();
   }
@@ -276,6 +277,12 @@ class LocalDatabase {
 
   startRealtimeSync() {
     setInterval(() => {
+      // Cooldown period: skip sync if we saved recently to prevent overwriting local changes
+      if (this.lastSaveTime && (Date.now() - this.lastSaveTime < 15000)) {
+        console.log('Skipping real-time sync: within cooldown period after save');
+        return;
+      }
+      
       const gasUrl = this.getGasUrl();
       if (gasUrl) {
         const url = gasUrl.indexOf('?') !== -1 ? `${gasUrl}&action=get` : `${gasUrl}?action=get`;
@@ -474,6 +481,7 @@ class LocalDatabase {
   // Save current state to LocalStorage and remote GAS API if configured
   save() {
     try {
+      this.lastSaveTime = Date.now();
       localStorage.setItem(DB_KEY, JSON.stringify(this.data));
 
       const gasUrl = this.getGasUrl();
