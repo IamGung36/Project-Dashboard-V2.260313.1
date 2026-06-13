@@ -529,14 +529,31 @@ class LocalDatabase {
           window.app.updateSyncWidgets();
         }
         google.script.run
-          .withSuccessHandler(() => {
+          .withSuccessHandler((serverDbJson) => {
+            try {
+              if (serverDbJson && serverDbJson !== 'null') {
+                const serverDb = JSON.parse(serverDbJson);
+                if (serverDb && (serverDb.projects || serverDb.awardedProjects)) {
+                  console.log('Database saved and synced back inside GAS successfully.');
+                  this.data = serverDb;
+                  this.patchAndMigrate();
+                  localStorage.setItem(DB_KEY, JSON.stringify(this.data));
+                  if (window.app && typeof window.app.updateViews === 'function') {
+                    window.app.updateViews();
+                  }
+                }
+              }
+            } catch (e) {
+              console.error('Failed to parse returned database from GAS:', e);
+            }
             this.isSaving = false;
             this.lastSaveTime = Date.now();
             if (window.app && typeof window.app.updateSyncWidgets === 'function') {
               window.app.updateSyncWidgets();
             }
           })
-          .withFailureHandler(() => {
+          .withFailureHandler((err) => {
+            console.error('Failed to save database via GAS run:', err);
             this.isSaving = false;
             this.lastSaveTime = Date.now();
             if (window.app && typeof window.app.updateSyncWidgets === 'function') {
@@ -556,8 +573,20 @@ class LocalDatabase {
             method: 'POST',
             body: JSON.stringify(this.data)
           })
-          .then(() => {
-            console.log('Database background sync: save request sent to server.');
+          .then(res => {
+            if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+            return res.json();
+          })
+          .then(serverDb => {
+            if (serverDb && (serverDb.projects || serverDb.awardedProjects)) {
+              console.log('Database saved and synced back from server successfully.');
+              this.data = serverDb;
+              this.patchAndMigrate();
+              localStorage.setItem(DB_KEY, JSON.stringify(this.data));
+              if (window.app && typeof window.app.updateViews === 'function') {
+                window.app.updateViews();
+              }
+            }
             this.isSaving = false;
             this.lastSaveTime = Date.now();
             if (window.app && typeof window.app.updateSyncWidgets === 'function') {

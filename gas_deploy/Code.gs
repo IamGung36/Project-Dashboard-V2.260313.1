@@ -24,8 +24,9 @@ function doPost(e) {
   try {
     var payloadStr = e && e.postData && e.postData.contents;
     if (action === 'save' && payloadStr) {
-      saveDatabase(payloadStr);
-      response = { status: 'success' };
+      var dbJson = saveDatabase(payloadStr);
+      return ContentService.createTextOutput(dbJson)
+                           .setMimeType(ContentService.MimeType.JSON);
     } else {
       response = { status: 'error', message: 'Invalid action or empty payload' };
     }
@@ -203,10 +204,17 @@ function saveDatabase(dbJson) {
       var objects = db[key] || [];
       objectsToSheet(sheet, objects, tabs[key]);
     }
-    return true;
+    
+    // Read written database back from sheet to get the exact saved state
+    var savedDb = {};
+    for (var key in tabs) {
+      var sheet = ss.getSheetByName(key);
+      savedDb[key] = sheetToObjects(sheet);
+    }
+    return JSON.stringify(savedDb);
   } catch (err) {
     Logger.log('Error in saveDatabase: ' + err.toString());
-    return false;
+    throw err;
   } finally {
     lock.releaseLock();
   }

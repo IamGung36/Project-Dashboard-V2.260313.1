@@ -514,8 +514,22 @@ class LocalDatabase {
           method: 'POST',
           body: JSON.stringify(this.data)
         })
-        .then(() => {
-          console.log('Database background sync: save request sent to server.');
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP error ${res.status}`);
+          return res.json();
+        })
+        .then(serverDb => {
+          if (serverDb && (serverDb.projects || serverDb.awardedProjects)) {
+            console.log('Database saved and synced back from server successfully.');
+            this.data = serverDb;
+            this.patchAndMigrate();
+            localStorage.setItem(DB_KEY, JSON.stringify(this.data));
+            if (window.app && typeof window.app.updateViews === 'function') {
+              window.app.updateViews();
+            }
+          } else {
+            console.warn('Server saved successfully but did not return valid database object.');
+          }
           this.isSaving = false;
           this.lastSaveTime = Date.now();
           if (window.app && typeof window.app.updateSyncWidgets === 'function') {
