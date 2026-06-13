@@ -1280,12 +1280,13 @@ class DashboardApp {
 
     const summaryContainer = document.getElementById('pipeline-summary-cards');
     if (summaryContainer) {
+      const sumTotal = sumRooftop + sumFarm + sumFloat + sumCarpark + sumBESS;
       summaryContainer.innerHTML = `
         <div class="col-md-4 col-lg-2">
           <div class="pipeline-card pipeline-card-total">
             <div class="pipeline-card-title"><i class="fas fa-list-check"></i> Total Projects</div>
-            <div class="pipeline-card-value">${countTotal}</div>
-            <div class="pipeline-card-subtext">${countTotal === 1 ? 'Project' : 'Projects'}</div>
+            <div class="pipeline-card-value">${sumTotal.toLocaleString(undefined, {maximumFractionDigits: 0})} kWp/kWh</div>
+            <div class="pipeline-card-subtext">Total: ${countTotal} ${countTotal === 1 ? 'project' : 'projects'}</div>
           </div>
         </div>
         <div class="col-md-4 col-lg-2">
@@ -1482,12 +1483,13 @@ class DashboardApp {
 
     const summaryContainer = document.getElementById('awarded-pipeline-summary-cards');
     if (summaryContainer) {
+      const sumTotal = sumRooftop + sumFarm + sumFloat + sumCarpark + sumBESS;
       summaryContainer.innerHTML = `
         <div class="col-md-4 col-lg-2">
           <div class="pipeline-card pipeline-card-total">
             <div class="pipeline-card-title"><i class="fas fa-list-check"></i> Total Projects</div>
-            <div class="pipeline-card-value">${countTotal}</div>
-            <div class="pipeline-card-subtext">${countTotal === 1 ? 'Project' : 'Projects'}</div>
+            <div class="pipeline-card-value">${sumTotal.toLocaleString(undefined, {maximumFractionDigits: 0})} kWp/kWh</div>
+            <div class="pipeline-card-subtext">Total: ${countTotal} ${countTotal === 1 ? 'project' : 'projects'}</div>
           </div>
         </div>
         <div class="col-md-4 col-lg-2">
@@ -1861,6 +1863,31 @@ class DashboardApp {
     // Load deliverables
     this.renderDeliverables('edit-project-deliverables-list', proj.deliverables || []);
 
+    // Load revisions
+    this.currentEditProjectRevisions = proj.revisions ? [...proj.revisions] : [];
+    this.renderRevisionsList('edit-project-revise-list', this.currentEditProjectRevisions);
+
+    // Setup Add Revision listener
+    const addRevBtn = document.getElementById('edit-project-add-revise-btn');
+    if (addRevBtn) {
+      addRevBtn.onclick = () => {
+        const input = document.getElementById('edit-project-new-revise-details');
+        const details = input ? input.value.trim() : '';
+        if (!details) {
+          alert('กรุณาระบุรายละเอียดที่ต้องการ Revise');
+          return;
+        }
+        const nextRevNo = this.currentEditProjectRevisions.length + 1;
+        this.currentEditProjectRevisions.push({
+          revNo: nextRevNo,
+          details: details,
+          date: new Date().toISOString().split('T')[0]
+        });
+        if (input) input.value = '';
+        this.renderRevisionsList('edit-project-revise-list', this.currentEditProjectRevisions);
+      };
+    }
+
     // Reset image fields
     const editFileInp = document.getElementById('edit-project-image-file');
     if (editFileInp) {
@@ -1916,6 +1943,7 @@ class DashboardApp {
         googleMapsLink: mapsLink,
         image: imageVal,
         deliverables: deliverablesList,
+        revisions: this.currentEditProjectRevisions,
         notes: notesVal,
         status: document.getElementById('edit-project-status').value,
         stage: stageVal,
@@ -1942,6 +1970,48 @@ class DashboardApp {
 
     const myModal = new bootstrap.Modal(document.getElementById('editProjectModal'));
     myModal.show();
+  }
+
+  renderRevisionsList(containerId, revisions) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (!revisions || revisions.length === 0) {
+      container.innerHTML = '<div class="text-muted text-center py-2" style="font-size: 12px;">ไม่มีประวัติการ Revise</div>';
+      return;
+    }
+    
+    revisions.forEach(rev => {
+      const item = document.createElement('div');
+      item.className = 'list-group-item d-flex justify-content-between align-items-center py-2';
+      item.style.fontSize = '12px';
+      item.style.background = 'transparent';
+      item.style.borderColor = 'var(--card-border)';
+      item.style.color = 'var(--text-color)';
+      item.innerHTML = `
+        <div>
+          <span class="badge bg-secondary me-2">Rev ${rev.revNo}</span>
+          <span>${rev.details}</span>
+          <span class="text-muted ms-2" style="font-size: 10px;">(${rev.date})</span>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-danger border-0 p-1" onclick="window.app.deleteRevision(${rev.revNo})" title="Delete Revision">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      `;
+      container.appendChild(item);
+    });
+  }
+
+  deleteRevision(revNo) {
+    if (confirm('คุณต้องการลบรายการ Revise นี้ใช่หรือไม่?')) {
+      this.currentEditProjectRevisions = this.currentEditProjectRevisions.filter(r => r.revNo !== revNo);
+      // Re-index revision numbers
+      this.currentEditProjectRevisions.forEach((r, idx) => {
+        r.revNo = idx + 1;
+      });
+      this.renderRevisionsList('edit-project-revise-list', this.currentEditProjectRevisions);
+    }
   }
 
   // Handle Project Add Submit

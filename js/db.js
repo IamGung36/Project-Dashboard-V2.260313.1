@@ -342,6 +342,10 @@ class LocalDatabase {
 
     // Migrate older stage strings if any
     this.data.projects.forEach(p => {
+      if (!p.revisions) {
+        p.revisions = [];
+        migrated = true;
+      }
       if (p.stage === 'Awarded') {
         p.stage = 'Award';
         migrated = true;
@@ -353,6 +357,10 @@ class LocalDatabase {
     });
 
     this.data.awardedProjects.forEach(p => {
+      if (!p.revisions) {
+        p.revisions = [];
+        migrated = true;
+      }
       if (p.stage === 'Awarded') {
         p.stage = 'Award';
         migrated = true;
@@ -521,7 +529,8 @@ class LocalDatabase {
       prTest: project.prTest || '',
       pv: project.pv || '',
       inverter: project.inverter || '',
-      awardNote: project.awardNote || ''
+      awardNote: project.awardNote || '',
+      revisions: project.revisions || []
     };
     
     if (newProject.stage === 'Award') {

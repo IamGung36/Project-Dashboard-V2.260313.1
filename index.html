@@ -1205,6 +1205,20 @@
               </div>
             </div>
 
+            <!-- ================= REVISE RECORDS ================= -->
+            <h5 class="text-success fw-bold border-top border-success-subtle pt-3 mb-3"><i class="fas fa-history text-success me-2"></i>Revise Records</h5>
+            <div class="mb-4">
+              <div class="d-flex gap-2 mb-3">
+                <input type="text" class="form-control border-success-subtle" id="edit-project-new-revise-details" placeholder="รายละเอียดที่ต้องการ Revise...">
+                <button type="button" class="btn btn-success text-white fw-bold" id="edit-project-add-revise-btn" style="background-color: var(--primary-color); border-color: var(--primary-color); white-space: nowrap;">
+                  <i class="fas fa-plus me-1"></i>เพิ่ม Revise
+                </button>
+              </div>
+              <div id="edit-project-revise-list" class="list-group" style="max-height: 200px; overflow-y: auto;">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
             <div class="mb-3">
               <label for="edit-project-notes" class="form-label fw-bold"><i class="fas fa-sticky-note text-warning me-2"></i>Notes / Additional Information</label>
               <textarea class="form-control border-success-subtle" id="edit-project-notes" rows="3" placeholder="Enter additional details, special conditions, or notes to team..."></textarea>

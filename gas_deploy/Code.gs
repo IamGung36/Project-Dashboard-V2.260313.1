@@ -86,7 +86,7 @@ function sheetToObjects(sheet) {
         hasData = true;
       }
       var key = headers[c];
-      if ((key === 'systems' || key === 'deliverables') && typeof val === 'string' && val.trim() !== '') {
+      if ((key === 'systems' || key === 'deliverables' || key === 'revisions') && typeof val === 'string' && val.trim() !== '') {
         try {
           obj[key] = JSON.parse(val);
         } catch (e) {
@@ -148,8 +148,8 @@ function getDatabaseJson() {
     var db = {};
     
     var tabs = {
-      projects: ['id', 'code', 'name', 'region', 'engineer', 'businessType', 'investor', 'client', 'systems', 'capacity', 'lat', 'lng', 'googleMapsLink', 'image', 'deliverables', 'notes', 'status', 'stage', 'deadline', 'constructionDate', 'codDate', 'prTest', 'pv', 'inverter', 'awardNote'],
-      awardedProjects: ['id', 'code', 'name', 'region', 'engineer', 'businessType', 'investor', 'client', 'systems', 'capacity', 'lat', 'lng', 'googleMapsLink', 'image', 'deliverables', 'notes', 'status', 'stage', 'deadline', 'constructionDate', 'codDate', 'prTest', 'pv', 'inverter', 'awardNote'],
+      projects: ['id', 'code', 'name', 'region', 'engineer', 'businessType', 'investor', 'client', 'systems', 'capacity', 'lat', 'lng', 'googleMapsLink', 'image', 'deliverables', 'notes', 'status', 'stage', 'deadline', 'constructionDate', 'codDate', 'prTest', 'pv', 'inverter', 'awardNote', 'revisions'],
+      awardedProjects: ['id', 'code', 'name', 'region', 'engineer', 'businessType', 'investor', 'client', 'systems', 'capacity', 'lat', 'lng', 'googleMapsLink', 'image', 'deliverables', 'notes', 'status', 'stage', 'deadline', 'constructionDate', 'codDate', 'prTest', 'pv', 'inverter', 'awardNote', 'revisions'],
       members: ['id', 'name', 'role'],
       holidays: ['id', 'date', 'name'],
       manhours: ['id', 'memberId', 'date', 'hours', 'projectId', 'deliverableName'],
@@ -187,8 +187,8 @@ function saveDatabase(dbJson) {
     var db = JSON.parse(dbJson);
     
     var tabs = {
-      projects: ['id', 'code', 'name', 'region', 'engineer', 'businessType', 'investor', 'client', 'systems', 'capacity', 'lat', 'lng', 'googleMapsLink', 'image', 'deliverables', 'notes', 'status', 'stage', 'deadline', 'constructionDate', 'codDate', 'prTest', 'pv', 'inverter', 'awardNote'],
-      awardedProjects: ['id', 'code', 'name', 'region', 'engineer', 'businessType', 'investor', 'client', 'systems', 'capacity', 'lat', 'lng', 'googleMapsLink', 'image', 'deliverables', 'notes', 'status', 'stage', 'deadline', 'constructionDate', 'codDate', 'prTest', 'pv', 'inverter', 'awardNote'],
+      projects: ['id', 'code', 'name', 'region', 'engineer', 'businessType', 'investor', 'client', 'systems', 'capacity', 'lat', 'lng', 'googleMapsLink', 'image', 'deliverables', 'notes', 'status', 'stage', 'deadline', 'constructionDate', 'codDate', 'prTest', 'pv', 'inverter', 'awardNote', 'revisions'],
+      awardedProjects: ['id', 'code', 'name', 'region', 'engineer', 'businessType', 'investor', 'client', 'systems', 'capacity', 'lat', 'lng', 'googleMapsLink', 'image', 'deliverables', 'notes', 'status', 'stage', 'deadline', 'constructionDate', 'codDate', 'prTest', 'pv', 'inverter', 'awardNote', 'revisions'],
       members: ['id', 'name', 'role'],
       holidays: ['id', 'date', 'name'],
       manhours: ['id', 'memberId', 'date', 'hours', 'projectId', 'deliverableName'],
@@ -231,8 +231,8 @@ function resetDatabase() {
     }
     
     var tabs = {
-      projects: ['id', 'code', 'name', 'region', 'engineer', 'businessType', 'investor', 'client', 'systems', 'capacity', 'lat', 'lng', 'googleMapsLink', 'image', 'deliverables', 'notes', 'status', 'stage', 'deadline', 'constructionDate', 'codDate', 'prTest', 'pv', 'inverter', 'awardNote'],
-      awardedProjects: ['id', 'code', 'name', 'region', 'engineer', 'businessType', 'investor', 'client', 'systems', 'capacity', 'lat', 'lng', 'googleMapsLink', 'image', 'deliverables', 'notes', 'status', 'stage', 'deadline', 'constructionDate', 'codDate', 'prTest', 'pv', 'inverter', 'awardNote'],
+      projects: ['id', 'code', 'name', 'region', 'engineer', 'businessType', 'investor', 'client', 'systems', 'capacity', 'lat', 'lng', 'googleMapsLink', 'image', 'deliverables', 'notes', 'status', 'stage', 'deadline', 'constructionDate', 'codDate', 'prTest', 'pv', 'inverter', 'awardNote', 'revisions'],
+      awardedProjects: ['id', 'code', 'name', 'region', 'engineer', 'businessType', 'investor', 'client', 'systems', 'capacity', 'lat', 'lng', 'googleMapsLink', 'image', 'deliverables', 'notes', 'status', 'stage', 'deadline', 'constructionDate', 'codDate', 'prTest', 'pv', 'inverter', 'awardNote', 'revisions'],
       members: ['id', 'name', 'role'],
       holidays: ['id', 'date', 'name'],
       manhours: ['id', 'memberId', 'date', 'hours', 'projectId', 'deliverableName'],

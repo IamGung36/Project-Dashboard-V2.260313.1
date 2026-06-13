@@ -639,6 +639,7 @@ footer {
 
 .calendar-day {
   min-height: 95px;
+  min-width: 0; /* Prevents grid column expansion from nowrap contents */
   border: 1px solid var(--card-border);
   background: var(--card-bg);
   border-radius: 8px;
@@ -678,6 +679,8 @@ footer {
 
 .calendar-day.today {
   border: 2px solid var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 5px rgba(2, 87, 37, 0.3);
 }
 
 .calendar-events {
@@ -687,6 +690,7 @@ footer {
   margin-top: 6px;
   max-height: 60px;
   overflow-y: auto;
+  width: 100%;
 }
 
 .calendar-event {
@@ -698,6 +702,8 @@ footer {
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 500;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .calendar-event.holiday {

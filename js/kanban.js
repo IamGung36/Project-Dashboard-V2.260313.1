@@ -96,6 +96,16 @@ class KanbanBoard {
           deliverablesHtml += '</div>';
         }
 
+        let revisionsHtml = '';
+        if (proj.revisions && proj.revisions.length > 0) {
+          revisionsHtml = '<div class="mt-2 border-top border-light pt-2" style="font-size: 11px; max-height: 80px; overflow-y: auto; width: 100%;">';
+          revisionsHtml += '<div class="fw-semibold text-muted mb-1" style="font-size: 10.5px;"><i class="fas fa-history me-1"></i>Revisions:</div>';
+          proj.revisions.forEach(rev => {
+            revisionsHtml += `<div class="text-truncate mb-1" title="Rev ${rev.revNo}: ${rev.details}" style="font-size: 10px; color: var(--text-muted);"><span class="badge bg-secondary me-1" style="font-size: 8px; padding: 2px 4px;">Rev ${rev.revNo}</span>${rev.details}</div>`;
+          });
+          revisionsHtml += '</div>';
+        }
+
         card.innerHTML = `
           <div class="d-flex justify-content-between align-items-center mb-1">
             <span class="kanban-card-code">${proj.code}</span>
@@ -120,6 +130,7 @@ class KanbanBoard {
           </div>
 
           ${deliverablesHtml}
+          ${revisionsHtml}
 
           <div class="my-2 d-flex flex-wrap">
             ${systemsBadgesHtml}
