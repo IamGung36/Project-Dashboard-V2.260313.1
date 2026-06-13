@@ -899,14 +899,20 @@ footer {
 
 .map-card-img-box {
   flex: 0 0 160px;
+  height: 105px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 87, 37, 0.03); /* Theme soft background */
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  overflow: hidden;
 }
 
 .map-card-img {
-  width: 160px;
-  height: 105px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid var(--card-border);
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .map-card-caption {
@@ -1217,6 +1223,18 @@ footer {
   font-weight: 600;
   color: var(--text-color);
   word-break: break-all;
+}
+
+/* Delete Project Button Styling */
+.delete-project-btn {
+  color: var(--accent-red);
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.delete-project-btn:hover {
+  background: rgba(192, 57, 43, 0.1) !important;
+  color: #c0392b !important;
 }
 
 </style>

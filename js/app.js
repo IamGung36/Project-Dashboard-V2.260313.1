@@ -465,8 +465,53 @@ class DashboardApp {
       });
     }
 
+    // Auto-select Region from coordinates or Google Maps link
+    const autoSelectRegion = (coordsId, mapsLinkId, regionId) => {
+      const coordsInput = document.getElementById(coordsId);
+      const mapsLinkInput = document.getElementById(mapsLinkId);
+      const regionSelect = document.getElementById(regionId);
+      if (!coordsInput || !regionSelect) return;
+
+      const coordsVal = coordsInput.value.trim();
+      const mapsLink = mapsLinkInput ? mapsLinkInput.value.trim() : '';
+      const { lat, lng } = this.parseCoordinates(coordsVal, mapsLink);
+      
+      const region = this.getRegionFromCoords(lat, lng);
+      if (region) {
+        regionSelect.value = region;
+      }
+    };
+
+    const projCoords = document.getElementById('project-coords');
+    const projMapsLink = document.getElementById('project-maps-link');
+    if (projCoords) {
+      projCoords.addEventListener('input', () => autoSelectRegion('project-coords', 'project-maps-link', 'project-region'));
+    }
+    if (projMapsLink) {
+      projMapsLink.addEventListener('input', () => autoSelectRegion('project-coords', 'project-maps-link', 'project-region'));
+    }
+
+    const editProjCoords = document.getElementById('edit-project-coords');
+    const editProjMapsLink = document.getElementById('edit-project-maps-link');
+    if (editProjCoords) {
+      editProjCoords.addEventListener('input', () => autoSelectRegion('edit-project-coords', 'edit-project-maps-link', 'edit-project-region'));
+    }
+    if (editProjMapsLink) {
+      editProjMapsLink.addEventListener('input', () => autoSelectRegion('edit-project-coords', 'edit-project-maps-link', 'edit-project-region'));
+    }
+
     // Initial renders
     this.updateViews();
+  }
+
+  getRegionFromCoords(lat, lng) {
+    if (lat === null || lng === null || isNaN(lat) || isNaN(lng)) return '';
+    if (lat < 11.0) return 'South';
+    if (lat > 17.5) return 'North';
+    if (lat > 14.0 && lng > 101.6) return 'Northeast';
+    if (lng < 99.6 && lat >= 11.0 && lat <= 17.5) return 'West';
+    if (lng > 100.8 && lat >= 11.0 && lat <= 14.3) return 'East';
+    return 'Central';
   }
 
   // Set theme and update maps styling
@@ -662,7 +707,11 @@ class DashboardApp {
       if (p.stage === 'Award') {
         pinColor = currentTheme === 'dark' ? '#2ecc71' : '#025725';
       } else {
-        pinColor = currentTheme === 'dark' ? '#f59e0b' : '#d35400';
+        if (p.status === 'Standby') {
+          pinColor = '#7f8c8d';
+        } else {
+          pinColor = currentTheme === 'dark' ? '#f59e0b' : '#d35400';
+        }
       }
 
       const markerIcon = this.getPinIconSvg(pinColor);
@@ -860,6 +909,7 @@ class DashboardApp {
     };
     
     let totalSolarCapacity = 0;
+    let bessCapacity = 0;
     
     projects.forEach(p => {
       if (p.systems) {
@@ -867,26 +917,30 @@ class DashboardApp {
           if (solarTypes.includes(sysName) && cap > 0) {
             solarSystemData[sysName] += parseFloat(cap);
             totalSolarCapacity += parseFloat(cap);
+          } else if (sysName === 'BESS' && cap > 0) {
+            bessCapacity += parseFloat(cap);
           }
         });
       }
     });
 
-    // Populate bottom side details in 2x2 grid with solar icons
+    // Populate bottom side details in grid with system icons
     const detailsEl = document.getElementById('portfolio-system-details');
     if (detailsEl) {
       const systemColors = {
         'Rooftop': '#025725',
         'Farm': '#10b981',
         'Floating': '#0284c7',
-        'Carpark': '#f59e0b'
+        'Carpark': '#f59e0b',
+        'BESS': '#dc2626'
       };
       
       const systemIcons = {
         'Rooftop': 'fas fa-house-chimney',
         'Farm': 'fas fa-mountain-sun',
         'Floating': 'fas fa-water',
-        'Carpark': 'fas fa-square-parking'
+        'Carpark': 'fas fa-square-parking',
+        'BESS': 'fas fa-battery-three-quarters'
       };
       
       let detailsHtml = '<div class="row g-3">';
@@ -916,6 +970,29 @@ class DashboardApp {
           </div>
         `;
       });
+      
+      const bessProjects = projects.filter(p => p.systems && p.systems.BESS > 0);
+      const bessCount = bessProjects.length;
+      
+      detailsHtml += `
+        <div class="col-12">
+          <div class="p-3 rounded border d-flex align-items-center gap-3 stats-item-box" style="background: rgba(2, 87, 37, 0.015); border-color: var(--card-border) !important; min-height: 85px;">
+            <div class="d-flex align-items-center justify-content-center rounded-circle" style="width: 44px; height: 44px; background: ${systemColors['BESS']}15; color: ${systemColors['BESS']}; flex-shrink: 0;">
+              <i class="${systemIcons['BESS']}" style="font-size: 18px;"></i>
+            </div>
+            <div class="flex-grow-1" style="min-width: 0;">
+              <div class="text-muted fw-semibold text-truncate mb-1" style="font-size: 12px; line-height: 1.2;">BESS (Battery Storage)</div>
+              <div class="fw-bold text-success text-truncate" style="font-size: 14px; line-height: 1.2;">
+                ${bessCapacity.toFixed(2)} <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">MWh</span>
+              </div>
+              <div class="text-muted text-truncate" style="font-size: 11px; margin-top: 2px;">
+                ${bessCount} ${bessCount === 1 ? 'Project' : 'Projects'}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
       detailsHtml += '</div>';
       detailsEl.innerHTML = detailsHtml;
     }
@@ -960,6 +1037,7 @@ class DashboardApp {
     };
     
     let totalSolarCapacity = 0;
+    let bessCapacity = 0;
     
     projects.forEach(p => {
       if (p.systems) {
@@ -967,26 +1045,30 @@ class DashboardApp {
           if (solarTypes.includes(sysName) && cap > 0) {
             solarSystemData[sysName] += parseFloat(cap);
             totalSolarCapacity += parseFloat(cap);
+          } else if (sysName === 'BESS' && cap > 0) {
+            bessCapacity += parseFloat(cap);
           }
         });
       }
     });
 
-    // Populate bottom side details in 2x2 grid with solar icons
+    // Populate bottom side details in grid with system icons
     const detailsEl = document.getElementById('overview-system-details');
     if (detailsEl) {
       const systemColors = {
         'Rooftop': '#025725',
         'Farm': '#10b981',
         'Floating': '#0284c7',
-        'Carpark': '#f59e0b'
+        'Carpark': '#f59e0b',
+        'BESS': '#dc2626'
       };
       
       const systemIcons = {
         'Rooftop': 'fas fa-house-chimney',
         'Farm': 'fas fa-mountain-sun',
         'Floating': 'fas fa-water',
-        'Carpark': 'fas fa-square-parking'
+        'Carpark': 'fas fa-square-parking',
+        'BESS': 'fas fa-battery-three-quarters'
       };
       
       let detailsHtml = '<div class="row g-3">';
@@ -1016,6 +1098,29 @@ class DashboardApp {
           </div>
         `;
       });
+      
+      const bessProjects = projects.filter(p => p.systems && p.systems.BESS > 0);
+      const bessCount = bessProjects.length;
+      
+      detailsHtml += `
+        <div class="col-12">
+          <div class="p-3 rounded border d-flex align-items-center gap-3 stats-item-box" style="background: rgba(2, 87, 37, 0.015); border-color: var(--card-border) !important; min-height: 85px;">
+            <div class="d-flex align-items-center justify-content-center rounded-circle" style="width: 44px; height: 44px; background: ${systemColors['BESS']}15; color: ${systemColors['BESS']}; flex-shrink: 0;">
+              <i class="${systemIcons['BESS']}" style="font-size: 18px;"></i>
+            </div>
+            <div class="flex-grow-1" style="min-width: 0;">
+              <div class="text-muted fw-semibold text-truncate mb-1" style="font-size: 12px; line-height: 1.2;">BESS (Battery Storage)</div>
+              <div class="fw-bold text-success text-truncate" style="font-size: 14px; line-height: 1.2;">
+                ${bessCapacity.toFixed(2)} <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">MWh</span>
+              </div>
+              <div class="text-muted text-truncate" style="font-size: 11px; margin-top: 2px;">
+                ${bessCount} ${bessCount === 1 ? 'Project' : 'Projects'}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      
       detailsHtml += '</div>';
       detailsEl.innerHTML = detailsHtml;
     }
@@ -1330,7 +1435,7 @@ class DashboardApp {
     tbody.innerHTML = '';
 
     if (projects.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="13" class="text-center py-4 text-muted">No projects found matching the filter options.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="14" class="text-center py-4 text-muted">No projects found matching the filter options.</td></tr>`;
       return;
     }
 
@@ -1378,11 +1483,11 @@ class DashboardApp {
             ${p.name}
           </a>
         </td>
-        <td>${p.region}</td>
+        <td>${p.region || '-'}</td>
         <td>${engName}</td>
-        <td class="fw-bold text-primary">${p.investor}</td>
-        <td>${p.businessType}</td>
-        <td>${p.client}</td>
+        <td class="fw-bold text-primary">${p.investor || '-'}</td>
+        <td>${p.businessType || '-'}</td>
+        <td>${p.client || '-'}</td>
         <td><div class="d-flex flex-wrap">${systemsHtml}</div></td>
         <td class="text-end fw-bold">${capacityText}</td>
         <td>
@@ -1399,6 +1504,11 @@ class DashboardApp {
         <td class="text-center">${this.formatDate(p.deadline)}</td>
         <td class="text-center">${statusBadge}</td>
         <td class="text-center">${stageBadge}</td>
+        <td class="text-center">
+          <button class="btn btn-sm btn-outline-danger border-0 p-1 delete-project-btn" onclick="window.app.handleDeleteProject('${p.id}')" title="Delete Project">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
       `;
 
       tbody.appendChild(row);
@@ -1533,7 +1643,7 @@ class DashboardApp {
     tbody.innerHTML = '';
 
     if (projects.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="13" class="text-center py-4 text-muted">No projects found matching the filter options.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="14" class="text-center py-4 text-muted">No projects found matching the filter options.</td></tr>`;
       return;
     }
 
@@ -1581,11 +1691,11 @@ class DashboardApp {
             ${p.name}
           </a>
         </td>
-        <td>${p.region}</td>
+        <td>${p.region || '-'}</td>
         <td>${engName}</td>
-        <td class="fw-bold text-primary">${p.investor}</td>
-        <td>${p.businessType}</td>
-        <td>${p.client}</td>
+        <td class="fw-bold text-primary">${p.investor || '-'}</td>
+        <td>${p.businessType || '-'}</td>
+        <td>${p.client || '-'}</td>
         <td><div class="d-flex flex-wrap">${systemsHtml}</div></td>
         <td class="text-end fw-bold">${capacityText}</td>
         <td>
@@ -1602,6 +1712,11 @@ class DashboardApp {
         <td class="text-center">${this.formatDate(p.deadline)}</td>
         <td class="text-center">${statusBadge}</td>
         <td class="text-center">${stageBadge}</td>
+        <td class="text-center">
+          <button class="btn btn-sm btn-outline-danger border-0 p-1 delete-project-btn" onclick="window.app.handleDeleteProject('${p.id}')" title="Delete Project">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
       `;
 
       tbody.appendChild(row);
@@ -2035,12 +2150,6 @@ class DashboardApp {
     const deadline = document.getElementById('project-deadline').value;
 
     const systemsObj = this.readSystemsFromDom('add-project-systems-container');
-    
-    let hasSystemSelected = Object.keys(systemsObj).length > 0;
-    if (!hasSystemSelected) {
-      alert('Please check at least one installation system type and set its capacity.');
-      return;
-    }
 
     // Image resolution
     let imageVal = '';

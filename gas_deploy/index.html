@@ -367,6 +367,7 @@
                     <th class="text-center">Due Date</th>
                     <th class="text-center">Status</th>
                     <th class="text-center">Stage</th>
+                    <th class="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody id="pipeline-table-body">
@@ -478,6 +479,7 @@
                     <th class="text-center">Due Date</th>
                     <th class="text-center">Status</th>
                     <th class="text-center">Stage</th>
+                    <th class="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody id="awarded-pipeline-table-body">
@@ -516,8 +518,9 @@
                   <div class="row g-3 mb-4">
                     <div class="col-md-3">
                       <label for="project-region" class="form-label fw-bold">Region</label>
-                      <select class="form-select border-success-subtle" id="project-region" required>
-                        <option value="Central" selected>Central</option>
+                      <select class="form-select border-success-subtle" id="project-region">
+                        <option value="" selected>-- Select Region --</option>
+                        <option value="Central">Central</option>
                         <option value="North">North</option>
                         <option value="South">South</option>
                         <option value="Northeast">Northeast</option>
@@ -527,14 +530,15 @@
                     </div>
                     <div class="col-md-3">
                       <label for="project-engineer" class="form-label fw-bold">BD Engineer</label>
-                      <select class="form-select border-success-subtle" id="project-engineer" required>
-                        <option value="" selected disabled>-- Select BD Engineer --</option>
+                      <select class="form-select border-success-subtle" id="project-engineer">
+                        <option value="" selected>-- Select BD Engineer --</option>
                       </select>
                     </div>
                     <div class="col-md-3">
                       <label for="project-investor" class="form-label fw-bold">Investor</label>
-                      <select class="form-select border-success-subtle" id="project-investor" required>
-                        <option value="PTT" selected>PTT</option>
+                      <select class="form-select border-success-subtle" id="project-investor">
+                        <option value="" selected>-- Select Investor --</option>
+                        <option value="PTT">PTT</option>
                         <option value="GPSC">GPSC</option>
                         <option value="OR">OR</option>
                         <option value="GC">GC</option>
@@ -543,18 +547,19 @@
                     </div>
                     <div class="col-md-3">
                       <label for="project-business" class="form-label fw-bold">Business Type</label>
-                      <select class="form-select border-success-subtle" id="project-business" required>
-                        <option value="EPC" selected>EPC</option>
+                      <select class="form-select border-success-subtle" id="project-business">
+                        <option value="" selected>-- Select Business --</option>
+                        <option value="EPC">EPC</option>
                         <option value="PPA">PPA</option>
                         <option value="Treading">Treading</option>
                       </select>
                     </div>
                   </div>
-
+ 
                   <div class="row g-3 mb-4">
                     <div class="col-md-12">
                       <label for="project-client" class="form-label fw-bold">Client</label>
-                      <input type="text" class="form-control border-success-subtle" id="project-client" placeholder="Client / Contracting Entity" required>
+                      <input type="text" class="form-control border-success-subtle" id="project-client" placeholder="Client / Contracting Entity">
                     </div>
                   </div>
 
@@ -651,15 +656,15 @@
                     </div>
                     <div class="col-md-4">
                       <label for="project-deadline" class="form-label fw-bold">Project Deadline</label>
-                      <input type="date" class="form-control border-success-subtle" id="project-deadline" required>
+                      <input type="date" class="form-control border-success-subtle" id="project-deadline">
                     </div>
                   </div>
-
+ 
                   <div class="row g-3 mb-4">
                     <div class="col-md-6">
                       <label for="project-stage" class="form-label fw-bold">Development Stage</label>
                       <div class="d-flex gap-2">
-                        <select class="form-select border-success-subtle" id="project-stage" required style="flex-grow: 1;">
+                        <select class="form-select border-success-subtle" id="project-stage" style="flex-grow: 1;">
                           <option value="Underdevelop" selected>Underdevelop</option>
                           <option value="Award">Award</option>
                           <option value="Cancle">Cancle</option>
@@ -672,7 +677,7 @@
                     </div>
                     <div class="col-md-6">
                       <label for="project-status" class="form-label fw-bold">Work Status</label>
-                      <select class="form-select border-success-subtle" id="project-status" required>
+                      <select class="form-select border-success-subtle" id="project-status">
                         <option value="Standby" selected>Standby</option>
                         <option value="In Progress">In Progress</option>
                         <option value="Complete">Complete</option>
@@ -1026,7 +1031,8 @@
             <div class="row g-3 mb-3">
               <div class="col-md-3">
                 <label for="edit-project-region" class="form-label fw-bold">Region</label>
-                <select class="form-select border-success-subtle" id="edit-project-region" required>
+                <select class="form-select border-success-subtle" id="edit-project-region">
+                  <option value="">-- Select Region --</option>
                   <option value="Central">Central</option>
                   <option value="North">North</option>
                   <option value="South">South</option>
@@ -1037,13 +1043,14 @@
               </div>
               <div class="col-md-3">
                 <label for="edit-project-engineer" class="form-label fw-bold">BD Engineer</label>
-                <select class="form-select border-success-subtle" id="edit-project-engineer" required>
+                <select class="form-select border-success-subtle" id="edit-project-engineer">
                   <option value="">-- Select BD Engineer --</option>
                 </select>
               </div>
               <div class="col-md-3">
                 <label for="edit-project-investor" class="form-label fw-bold">Investor</label>
-                <select class="form-select border-success-subtle" id="edit-project-investor" required>
+                <select class="form-select border-success-subtle" id="edit-project-investor">
+                  <option value="">-- Select Investor --</option>
                   <option value="PTT">PTT</option>
                   <option value="GPSC">GPSC</option>
                   <option value="OR">OR</option>
@@ -1053,18 +1060,19 @@
               </div>
               <div class="col-md-3">
                 <label for="edit-project-business" class="form-label fw-bold">Business Type</label>
-                <select class="form-select border-success-subtle" id="edit-project-business" required>
+                <select class="form-select border-success-subtle" id="edit-project-business">
+                  <option value="">-- Select Business --</option>
                   <option value="EPC">EPC</option>
                   <option value="PPA">PPA</option>
                   <option value="Treading">Treading</option>
                 </select>
               </div>
             </div>
-
+ 
             <div class="row g-3 mb-3">
               <div class="col-md-12">
                 <label for="edit-project-client" class="form-label fw-bold">Client</label>
-                <input type="text" class="form-control border-success-subtle" id="edit-project-client" required>
+                <input type="text" class="form-control border-success-subtle" id="edit-project-client">
               </div>
             </div>
 
@@ -1154,15 +1162,15 @@
               </div>
               <div class="col-md-4">
                 <label for="edit-project-deadline" class="form-label fw-bold">Project Deadline</label>
-                <input type="date" class="form-control border-success-subtle" id="edit-project-deadline" required>
+                <input type="date" class="form-control border-success-subtle" id="edit-project-deadline">
               </div>
             </div>
-
+ 
             <div class="row g-3 mb-3">
               <div class="col-md-6">
                 <label for="edit-project-stage" class="form-label fw-bold">Development Stage</label>
                 <div class="d-flex gap-2">
-                  <select class="form-select border-success-subtle" id="edit-project-stage" required style="flex-grow: 1;">
+                  <select class="form-select border-success-subtle" id="edit-project-stage" style="flex-grow: 1;">
                     <option value="Underdevelop">Underdevelop</option>
                     <option value="Award">Award</option>
                     <option value="Cancle">Cancle</option>
@@ -1175,7 +1183,7 @@
               </div>
               <div class="col-md-6">
                 <label for="edit-project-status" class="form-label fw-bold">Work Status</label>
-                <select class="form-select border-success-subtle" id="edit-project-status" required>
+                <select class="form-select border-success-subtle" id="edit-project-status">
                   <option value="Standby">Standby</option>
                   <option value="In Progress">In Progress</option>
                   <option value="Complete">Complete</option>

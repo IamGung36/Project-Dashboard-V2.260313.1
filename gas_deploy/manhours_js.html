@@ -212,6 +212,10 @@ class ManhoursTracker {
           let subtaskInputsHtml = '';
           let subtaskWeeklySum = 0;
 
+          // Find the deliverable hours in project deliverables
+          const projDel = (project.deliverables || []).find(d => d.name === delName);
+          const defaultHours = projDel && typeof projDel.hours === 'number' ? projDel.hours : 0;
+
           days.forEach(day => {
             const dayStr = day.toISOString().split('T')[0];
             const log = memberWeekLogs.find(l => l.projectId === project.id && (l.deliverableName || '') === delName && l.date === dayStr);
@@ -228,7 +232,7 @@ class ManhoursTracker {
                   max="24" 
                   step="0.5" 
                   value="${logHours > 0 ? logHours : ''}" 
-                  placeholder="0"
+                  placeholder="${defaultHours}"
                   data-member-id="${member.id}" 
                   data-project-id="${project.id}"
                   data-deliverable-name="${delName}"
