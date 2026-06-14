@@ -325,7 +325,7 @@ class LocalDatabase {
   save() {
     try {
       this.lastWriteTime = Date.now();
-      localStorage.setItem(DB_KEY, JSON.stringify(this.data));
+      const backupData = JSON.parse(localStorage.getItem(DB_KEY)) || JSON.parse(JSON.stringify(this.data));
 
       const gasUrl = this.getGasUrl();
       if (gasUrl) {
@@ -365,14 +365,20 @@ class LocalDatabase {
         })
         .catch(e => {
           console.error('Failed to sync save to GAS API:', e);
+          // Revert changes locally on failure
+          this.data = backupData;
+          localStorage.setItem(DB_KEY, JSON.stringify(this.data));
+          if (window.app && typeof window.app.updateViews === 'function') {
+            window.app.updateViews();
+          }
           alert('ไม่สามารถบันทึกข้อมูลไปยัง Google Sheet ได้: ' + e.message);
           this.isSaving = false;
-          this.lastSaveTime = Date.now();
           if (window.app && typeof window.app.updateSyncWidgets === 'function') {
             window.app.updateSyncWidgets();
           }
         });
       } else {
+        localStorage.setItem(DB_KEY, JSON.stringify(this.data));
         this.lastSaveTime = Date.now();
         if (window.app && typeof window.app.updateSyncWidgets === 'function') {
           window.app.updateSyncWidgets();
