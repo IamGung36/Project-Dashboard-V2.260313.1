@@ -278,14 +278,20 @@ class LocalDatabase {
   }
 
   getGasUrl() {
-    return localStorage.getItem('PROJECT_DASHBOARD_GAS_URL') || '';
+    let url = localStorage.getItem('PROJECT_DASHBOARD_GAS_URL');
+    if (url === null) {
+      const defaultUrl = 'https://script.google.com/macros/s/AKfycbzaeR3Q4NloXjbkQHe2Nv-7AwtzZi7EZ9FTaxK_vOorNS0dhWh_2sOiX97J38zJHi0EUA/exec';
+      localStorage.setItem('PROJECT_DASHBOARD_GAS_URL', defaultUrl);
+      return defaultUrl;
+    }
+    return url;
   }
 
   setGasUrl(url) {
     if (url) {
       localStorage.setItem('PROJECT_DASHBOARD_GAS_URL', url.trim());
     } else {
-      localStorage.removeItem('PROJECT_DASHBOARD_GAS_URL');
+      localStorage.setItem('PROJECT_DASHBOARD_GAS_URL', '');
     }
   }
 

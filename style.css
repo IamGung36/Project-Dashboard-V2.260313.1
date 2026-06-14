@@ -1235,3 +1235,21 @@ footer {
   background: rgba(192, 57, 43, 0.1) !important;
   color: #c0392b !important;
 }
+
+/* Kanban Card Status Colors */
+.kanban-card.status-completed {
+  background-color: rgba(240, 253, 250, 0.9) !important;
+  border: 1px solid #10b981 !important;
+}
+[data-theme="dark"] .kanban-card.status-completed {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid #10b981 !important;
+}
+.kanban-card.status-incomplete {
+  background-color: rgba(254, 242, 242, 0.9) !important;
+  border: 1px solid #ef4444 !important;
+}
+[data-theme="dark"] .kanban-card.status-incomplete {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  border: 1px solid #ef4444 !important;
+}
