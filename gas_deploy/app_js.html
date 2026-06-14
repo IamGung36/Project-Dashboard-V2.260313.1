@@ -629,9 +629,25 @@ class DashboardApp {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('THEME', theme);
     
-    const style = theme === 'dark' ? this.darkMapStyle : this.lightMapStyle;
-    if (this.portfolioMap) this.portfolioMap.setOptions({ styles: style });
-    if (this.overviewMap) this.overviewMap.setOptions({ styles: style });
+    // Update Leaflet tile layer if maps are loaded
+    const tileUrl = theme === 'dark' 
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+      
+    if (this.portfolioMap) {
+      this.portfolioMap.eachLayer(layer => {
+        if (layer instanceof L.TileLayer) {
+          layer.setUrl(tileUrl);
+        }
+      });
+    }
+    if (this.overviewMap) {
+      this.overviewMap.eachLayer(layer => {
+        if (layer instanceof L.TileLayer) {
+          layer.setUrl(tileUrl);
+        }
+      });
+    }
 
     // Also update pin icons to stand out
     this.updateMapMarkers();
@@ -707,14 +723,14 @@ class DashboardApp {
     if (pageId === 'portfolio') {
       this.renderPortfolioCharts();
       if (this.portfolioMap) {
-        google.maps.event.trigger(this.portfolioMap, 'resize');
-        this.portfolioMap.setCenter(this.thailandCenter);
+        this.portfolioMap.invalidateSize();
+        this.portfolioMap.setView([this.thailandCenter.lat, this.thailandCenter.lng], 6);
       }
     } else if (pageId === 'overview') {
       this.renderOverviewCharts();
       if (this.overviewMap) {
-        google.maps.event.trigger(this.overviewMap, 'resize');
-        this.overviewMap.setCenter(this.thailandCenter);
+        this.overviewMap.invalidateSize();
+        this.overviewMap.setView([this.thailandCenter.lat, this.thailandCenter.lng], 6);
       }
     } else if (pageId === 'pipeline') {
       this.renderPipelineTable();
@@ -908,40 +924,57 @@ class DashboardApp {
   }
 
   initMaps() {
+    const thailandCenter = [this.thailandCenter.lat, this.thailandCenter.lng];
     const currentTheme = localStorage.getItem('THEME') || 'light';
-    const mapStyle = currentTheme === 'dark' ? this.darkMapStyle : this.lightMapStyle;
-
-    const mapOptions = {
-      center: this.thailandCenter,
-      zoom: 6,
-      styles: mapStyle,
-      mapTypeControl: true,
-      mapTypeControlOptions: {
-        style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-        position: google.maps.ControlPosition.TOP_RIGHT
-      }
-    };
+    const tileUrl = currentTheme === 'dark' 
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    const tileAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
     const portMapEl = document.getElementById('portfolio-map');
     if (portMapEl) {
-      this.portfolioMap = new google.maps.Map(portMapEl, mapOptions);
-      this.portfolioMap.addListener('click', () => {
-        if (this.sharedInfoWindow) {
-          this.sharedInfoWindow.close();
-        }
+      if (this.portfolioMap) {
+        try { this.portfolioMap.remove(); } catch(e) {}
+      }
+      this.portfolioMap = L.map('portfolio-map', {
+        center: thailandCenter,
+        zoom: 6,
+        attributionControl: true
       });
+      L.tileLayer(tileUrl, { attribution: tileAttribution, maxZoom: 20 }).addTo(this.portfolioMap);
+      
+      // Compatibility helper methods for search/resizing
+      this.portfolioMap.setCenter = (coords) => {
+        this.portfolioMap.setView([coords.lat, coords.lng], this.portfolioMap.getZoom());
+      };
+      this.portfolioMap.setZoom = (zoom) => {
+        this.portfolioMap.setView(this.portfolioMap.getCenter(), zoom);
+      };
     }
 
     const overMapEl = document.getElementById('overview-map');
     if (overMapEl) {
-      this.overviewMap = new google.maps.Map(overMapEl, mapOptions);
-      this.overviewMap.addListener('click', () => {
-        if (this.sharedInfoWindow) {
-          this.sharedInfoWindow.close();
-        }
+      if (this.overviewMap) {
+        try { this.overviewMap.remove(); } catch(e) {}
+      }
+      this.overviewMap = L.map('overview-map', {
+        center: thailandCenter,
+        zoom: 6,
+        attributionControl: true
       });
+      L.tileLayer(tileUrl, { attribution: tileAttribution, maxZoom: 20 }).addTo(this.overviewMap);
+      
+      // Compatibility helper methods for search/resizing
+      this.overviewMap.setCenter = (coords) => {
+        this.overviewMap.setView([coords.lat, coords.lng], this.overviewMap.getZoom());
+      };
+      this.overviewMap.setZoom = (zoom) => {
+        this.overviewMap.setView(this.overviewMap.getCenter(), zoom);
+      };
     }
 
+    this.portfolioMarkers = [];
+    this.overviewMarkers = [];
     this.updateMapMarkers();
   }
 
@@ -949,8 +982,8 @@ class DashboardApp {
   updateMapMarkers() {
     if (!this.portfolioMap || !this.overviewMap) return;
 
-    this.portfolioMarkers.forEach(m => m.setMap(null));
-    this.overviewMarkers.forEach(m => m.setMap(null));
+    this.portfolioMarkers.forEach(m => m.remove());
+    this.overviewMarkers.forEach(m => m.remove());
     this.portfolioMarkers = [];
     this.overviewMarkers = [];
 
@@ -974,7 +1007,12 @@ class DashboardApp {
         pinColor = currentTheme === 'dark' ? '#f59e0b' : '#d35400';
       }
 
-      const markerIcon = this.getPinIconSvg(pinColor);
+      const markerIcon = L.icon({
+        iconUrl: this.getPinIconSvg(pinColor),
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
+        popupAnchor: [0, -36]
+      });
 
       // Capacity conversion and solar type identification
       let solarCapacityMW = 0;
@@ -1130,26 +1168,24 @@ class DashboardApp {
         </div>
       `;
 
-      const marker = new google.maps.Marker({
-        position: { lat: p.lat, lng: p.lng },
-        icon: markerIcon,
-        title: p.name
+      const marker = L.marker([p.lat, p.lng], { icon: markerIcon, title: p.name });
+
+      // Bind popup with styling
+      marker.bindPopup(infoHtml, {
+        maxWidth: 450,
+        className: 'map-card-popup'
       });
 
       // Show on mouseover (hover)
-      marker.addListener('mouseover', () => {
-        if (!this.sharedInfoWindow) {
-          this.sharedInfoWindow = new google.maps.InfoWindow();
-        }
-        this.sharedInfoWindow.setContent(infoHtml);
-        this.sharedInfoWindow.open(p.stage === 'Award' ? this.portfolioMap : this.overviewMap, marker);
+      marker.on('mouseover', function(e) {
+        this.openPopup();
       });
 
       if (p.stage === 'Award') {
-        marker.setMap(this.portfolioMap);
+        marker.addTo(this.portfolioMap);
         this.portfolioMarkers.push(marker);
       } else if (p.stage === 'Underdevelop') {
-        marker.setMap(this.overviewMap);
+        marker.addTo(this.overviewMap);
         this.overviewMarkers.push(marker);
       }
     });
@@ -2925,36 +2961,27 @@ class DashboardApp {
     const markerKey = map === this.portfolioMap ? 'portfolioSearchMarker' : 'overviewSearchMarker';
     
     if (this[markerKey]) {
-      this[markerKey].setMap(null);
+      this[markerKey].remove();
     }
 
     // Custom marker icon (orange pin for search result)
     const pinColor = '#ea580c';
-    this[markerKey] = new google.maps.Marker({
-      position: coords,
-      map: map,
-      title: title,
-      animation: google.maps.Animation.DROP,
-      icon: {
-        url: this.getPinIconSvg(pinColor),
-        scaledSize: new google.maps.Size(36, 36),
-        anchor: new google.maps.Point(18, 36)
-      }
+    const markerIcon = L.icon({
+      iconUrl: this.getPinIconSvg(pinColor),
+      iconSize: [36, 36],
+      iconAnchor: [18, 36],
+      popupAnchor: [0, -36]
     });
 
-    const infoWindow = new google.maps.InfoWindow({
-      content: `<div class="map-info-window" style="color: #1a251f; padding: 6px; max-width: 260px;">
+    this[markerKey] = L.marker([coords.lat, coords.lng], { icon: markerIcon, title: title }).addTo(map);
+
+    const popupContent = `<div class="map-info-window" style="color: #1a251f; padding: 6px; max-width: 260px;">
         <h6 style="font-weight: 700; margin-bottom: 8px; color: #d35400;"><i class="fas fa-search me-2"></i>Search Result</h6>
         <p class="fw-bold" style="margin-bottom: 4px; font-size: 13px;">${title}</p>
         <p class="text-muted" style="margin-bottom: 4px; font-size: 11px;">Coordinates: ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}</p>
-      </div>`
-    });
+      </div>`;
 
-    this[markerKey].addListener('click', () => {
-      infoWindow.open(map, this[markerKey]);
-    });
-
-    infoWindow.open(map, this[markerKey]);
+    this[markerKey].bindPopup(popupContent).openPopup();
   }
 
   getFilteredPipelineProjects() {
