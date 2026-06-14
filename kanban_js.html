@@ -1,0 +1,363 @@
+﻿<script>
+/* Kanban Board Controller for Project Dashboard - English Version */
+
+class KanbanBoard {
+  constructor() {
+    this.columns = ['Standby', 'In Progress', 'Complete', 'Cancel'];
+    this.draggedCard = null;
+  }
+
+  // Render the Kanban Board
+  render() {
+    const container = document.getElementById('kanban-board-wrapper');
+    if (!container) return;
+
+    const projects = [...window.db.getProjects(), ...window.db.getAwardedProjects()];
+    const members = window.db.getMembers();
+    container.innerHTML = '';
+
+    this.columns.forEach(col => {
+      // Group projects by status
+      const statusClass = col.replace(/\s+/g, '').toLowerCase();
+      const colProjects = projects.filter(p => p.status === col);
+      
+      const colEl = document.createElement('div');
+      colEl.className = `kanban-col ${statusClass}`;
+      colEl.setAttribute('data-status', col);
+
+      let displayTitle = col;
+      let titleIcon = 'fa-clock';
+      if (col === 'Standby') { displayTitle = 'Standby'; titleIcon = 'fa-pause-circle'; }
+      else if (col === 'In Progress') { displayTitle = 'In Progress'; titleIcon = 'fa-spinner fa-spin'; }
+      else if (col === 'Complete') { displayTitle = 'Complete'; titleIcon = 'fa-check-circle'; }
+      else if (col === 'Cancel') { displayTitle = 'Cancel'; titleIcon = 'fa-times-circle'; }
+
+      colEl.innerHTML = `
+        <div class="kanban-header">
+          <h3 class="kanban-title">
+            <i class="fas ${titleIcon}"></i> ${displayTitle}
+          </h3>
+          <span class="kanban-badge" id="badge-${statusClass}">${colProjects.length}</span>
+        </div>
+        <div class="kanban-cards-list" data-status="${col}"></div>
+      `;
+
+      container.appendChild(colEl);
+
+      const listEl = colEl.querySelector('.kanban-cards-list');
+
+      colProjects.forEach(proj => {
+        const eng = members.find(m => m.id === proj.engineer);
+        const engineerName = eng ? eng.name : 'Unassigned';
+        
+        const card = document.createElement('div');
+        const isCompleted = proj.isCompleted === true;
+        card.className = 'kanban-card ' + (isCompleted ? 'status-completed' : 'status-incomplete');
+        card.setAttribute('draggable', 'true');
+        card.setAttribute('data-id', proj.id);
+
+        // Build list of system badges with capacity
+        let systemsBadgesHtml = '';
+        if (proj.systems) {
+          Object.entries(proj.systems).forEach(([sysName, cap]) => {
+            if (cap > 0) {
+              let sysBadgeClass = 'bg-success';
+              if (sysName === 'Farm') sysBadgeClass = 'bg-warning text-dark';
+              else if (sysName === 'Floating') sysBadgeClass = 'bg-info text-dark';
+              else if (sysName === 'Carpark') sysBadgeClass = 'bg-secondary';
+              else if (sysName === 'BESS') sysBadgeClass = 'bg-danger';
+              
+              systemsBadgesHtml += `<span class="badge ${sysBadgeClass} me-1 mb-1" style="font-size: 9px;">${sysName}: ${parseFloat(cap).toFixed(1)}M</span>`;
+            }
+          });
+        }
+        
+        if (!systemsBadgesHtml) {
+          systemsBadgesHtml = `<span class="badge bg-light text-dark border">None</span>`;
+        }
+
+        // Deliverables Checklist calculation & HTML
+        const deliverablesList = Array.isArray(proj.deliverables) ? proj.deliverables : [];
+        const totalDel = deliverablesList.length;
+        const checkedDel = deliverablesList.filter(d => d.checked).length;
+        const progressPercent = totalDel > 0 ? Math.round((checkedDel / totalDel) * 100) : 0;
+
+        let deliverablesHtml = '';
+        if (deliverablesList.length > 0) {
+          deliverablesHtml = '<div class="my-2 d-flex flex-wrap gap-1">';
+          deliverablesList.forEach((del, idx) => {
+            if (del.checked) {
+              const badgeClass = 'kanban-del-checked';
+              const iconClass = 'fas fa-check-circle';
+              deliverablesHtml += `
+                <span class="badge ${badgeClass} kanban-deliverable-chip" data-index="${idx}" style="cursor: pointer; font-size: 10px; padding: 4px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                  <i class="${iconClass}"></i> ${del.name}
+                </span>
+              `;
+            }
+          });
+          deliverablesHtml += '</div>';
+        }
+
+        let revisionsHtml = '';
+        const revisionsList = Array.isArray(proj.revisions) ? proj.revisions : [];
+        if (revisionsList.length > 0) {
+          revisionsHtml = '<div class="mt-2 border-top border-light pt-2" style="font-size: 11px; max-height: 80px; overflow-y: auto; width: 100%;">';
+          revisionsHtml += '<div class="fw-semibold text-muted mb-1" style="font-size: 10.5px;"><i class="fas fa-history me-1"></i>Revisions:</div>';
+          revisionsList.forEach(rev => {
+            revisionsHtml += `<div class="text-truncate mb-1" title="Rev ${rev.revNo}: ${rev.details}" style="font-size: 10px; color: var(--text-muted);"><span class="badge bg-secondary me-1" style="font-size: 8px; padding: 2px 4px;">Rev ${rev.revNo}</span>${rev.details}</div>`;
+          });
+          revisionsHtml += '</div>';
+        }
+
+        card.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="kanban-card-code">${proj.code}</span>
+            <span class="badge bg-light text-dark border" style="font-size: 10px;"><i class="fas fa-handshake"></i> ${proj.businessType || '-'}</span>
+          </div>
+          <h4 class="kanban-card-title mb-2">${proj.name}</h4>
+          
+          <div class="mb-2">
+            <a href="${proj.googleMapsLink || `https://www.google.com/maps?q=${proj.lat},${proj.lng}`}" target="_blank" class="kanban-location-link text-decoration-none fw-semibold" style="font-size: 12px; color: #2563eb; display: inline-flex; align-items: center; gap: 5px;">
+              <i class="fas fa-map-location-dot" style="color: #f87171;"></i> View Location
+            </a>
+          </div>
+
+          <div class="mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 11px;">
+              <span class="text-muted fw-semibold">Overall Progress</span>
+              <span class="fw-bold text-primary">${checkedDel}/${totalDel} (${progressPercent}%)</span>
+            </div>
+            <div class="progress" style="height: 6px; background-color: var(--card-border); border-radius: 3px;">
+              <div class="progress-bar" role="progressbar" style="width: ${progressPercent}%; background-color: var(--primary-color); border-radius: 3px;"></div>
+            </div>
+          </div>
+
+          ${deliverablesHtml}
+          ${revisionsHtml}
+
+          <div class="my-2 d-flex flex-wrap">
+            ${systemsBadgesHtml}
+          </div>
+
+          <div class="kanban-card-meta border-top border-light pt-2 mt-2">
+            <span><i class="fas fa-user-tie"></i> ${engineerName}</span>
+            <span><strong>${window.formatProjectCapacityMW(proj)}</strong></span>
+          </div>
+          
+          <div class="d-flex justify-content-between align-items-center mt-2" style="font-size: 11px; color: var(--text-muted);">
+            <span><i class="fas fa-building"></i> ${proj.investor || '-'}</span>
+            <span><i class="fas fa-calendar-alt"></i> ${window.app.formatDate(proj.deadline)}</span>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mt-2 border-top border-light pt-2" style="font-size: 11px;">
+            <span class="fw-semibold text-muted d-inline-flex align-items-center gap-1">
+              <i class="fas fa-trophy" style="color: #f59e0b;"></i> Stage:
+            </span>
+            <select class="kanban-stage-select border-0" style="font-size: 11px; padding: 2px 8px; border-radius: 6px; cursor: pointer;">
+              <option value="Underdevelop" ${proj.stage === 'Underdevelop' ? 'selected' : ''}>Underdevelop</option>
+              <option value="Award" ${proj.stage === 'Award' ? 'selected' : ''}>Award</option>
+              <option value="Cancle" ${proj.stage === 'Cancle' ? 'selected' : ''}>Cancle</option>
+              <option value="Hold" ${proj.stage === 'Hold' ? 'selected' : ''}>Hold</option>
+            </select>
+          </div>
+        `;
+
+        // Card events for dragging
+        card.addEventListener('dragstart', (e) => this.handleDragStart(e, card));
+        card.addEventListener('dragend', (e) => this.handleDragEnd(e, card));
+        
+        // Handle changes on the stage select dropdown
+        const stageSelect = card.querySelector('.kanban-stage-select');
+        if (stageSelect) {
+          stageSelect.addEventListener('change', (e) => {
+            e.stopPropagation();
+            const newStage = e.target.value;
+            if (newStage === 'Award') {
+              const awardData = {
+                constructionDate: proj.constructionDate || '',
+                codDate: proj.codDate || '',
+                prTest: proj.prTest || '',
+                pv: proj.pv || '',
+                inverter: proj.inverter || '',
+                awardNote: proj.awardNote || ''
+              };
+              window.app.showAwardDetailsModal(proj.id, awardData, 
+                (data) => {
+                  window.db.updateProject(proj.id, { 
+                    stage: 'Award',
+                    ...data
+                  });
+                  this.render();
+                  if (window.app && typeof window.app.updateViews === 'function') {
+                    window.app.updateViews();
+                  }
+                },
+                () => {
+                  stageSelect.value = proj.stage;
+                }
+              );
+            } else {
+              window.db.updateProject(proj.id, { stage: newStage });
+              this.render();
+              if (window.app && typeof window.app.updateViews === 'function') {
+                window.app.updateViews();
+              }
+            }
+          });
+          stageSelect.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent opening the edit project modal
+          });
+        }
+
+        // Click handler to toggle deliverables or edit project
+        card.addEventListener('click', (e) => {
+          // If clicked a deliverable chip, toggle its checked status
+          const chip = e.target.closest('.kanban-deliverable-chip');
+          if (chip) {
+            e.preventDefault();
+            e.stopPropagation();
+            const delIndex = parseInt(chip.getAttribute('data-index'));
+            const deliverables = [...(Array.isArray(proj.deliverables) ? proj.deliverables : [])];
+            deliverables[delIndex].checked = !deliverables[delIndex].checked;
+            window.db.updateProject(proj.id, { deliverables });
+            this.render();
+            if (window.app && typeof window.app.updateViews === 'function') {
+              window.app.updateViews();
+            }
+            return;
+          }
+
+          // If clicked map link, let default behavior open it
+          const locLink = e.target.closest('.kanban-location-link');
+          if (locLink) {
+            e.stopPropagation();
+            return;
+          }
+
+          // Open the card status modal
+          if (e.target.closest('.kanban-card')) {
+            e.stopPropagation();
+            this.openCardStatusModal(proj.id);
+          }
+        });
+
+        listEl.appendChild(card);
+      });
+
+      // Column drop events
+      listEl.addEventListener('dragover', (e) => this.handleDragOver(e));
+      listEl.addEventListener('dragenter', (e) => this.handleDragEnter(e, colEl));
+      listEl.addEventListener('dragleave', (e) => this.handleDragLeave(e, colEl));
+      listEl.addEventListener('drop', (e) => this.handleDrop(e, col));
+    });
+  }
+
+  openCardStatusModal(projId) {
+    const proj = window.db.getProject(projId);
+    if (!proj) return;
+
+    document.getElementById('kanban-status-project-name').innerText = proj.name;
+
+    const modalEl = document.getElementById('kanbanCardStatusModal');
+    const modal = new bootstrap.Modal(modalEl);
+
+    // Get buttons
+    const btnComplete = document.getElementById('kanban-status-btn-complete');
+    const btnIncomplete = document.getElementById('kanban-status-btn-incomplete');
+    const btnEdit = document.getElementById('kanban-status-btn-edit');
+
+    // Clone buttons to clear old event listeners
+    const newBtnComplete = btnComplete.cloneNode(true);
+    const newBtnIncomplete = btnIncomplete.cloneNode(true);
+    const newBtnEdit = btnEdit.cloneNode(true);
+
+    btnComplete.parentNode.replaceChild(newBtnComplete, btnComplete);
+    btnIncomplete.parentNode.replaceChild(newBtnIncomplete, btnIncomplete);
+    btnEdit.parentNode.replaceChild(newBtnEdit, btnEdit);
+
+    newBtnComplete.addEventListener('click', () => {
+      window.db.updateProject(projId, { isCompleted: true });
+      modal.hide();
+      this.render();
+      if (window.app && typeof window.app.updateViews === 'function') {
+        window.app.updateViews();
+      }
+    });
+
+    newBtnIncomplete.addEventListener('click', () => {
+      window.db.updateProject(projId, { isCompleted: false });
+      modal.hide();
+      this.render();
+      if (window.app && typeof window.app.updateViews === 'function') {
+        window.app.updateViews();
+      }
+    });
+
+    newBtnEdit.addEventListener('click', () => {
+      modal.hide();
+      setTimeout(() => {
+        if (window.app && typeof window.app.openEditProjectModal === 'function') {
+          window.app.openEditProjectModal(projId);
+        }
+      }, 350);
+    });
+
+    modal.show();
+  }
+
+  handleDragStart(e, card) {
+    this.draggedCard = card;
+    card.classList.add('dragging');
+    e.dataTransfer.setData('text/plain', card.getAttribute('data-id'));
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  handleDragEnd(e, card) {
+    card.classList.remove('dragging');
+    this.draggedCard = null;
+    document.querySelectorAll('.kanban-col').forEach(col => {
+      col.classList.remove('drag-over');
+    });
+  }
+
+  handleDragOver(e) {
+    e.preventDefault();
+    return false;
+  }
+
+  handleDragEnter(e, colEl) {
+    e.preventDefault();
+    colEl.classList.add('drag-over');
+  }
+
+  handleDragLeave(e, colEl) {
+    colEl.classList.remove('drag-over');
+  }
+
+  handleDrop(e, targetStatus) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const projId = e.dataTransfer.getData('text/plain');
+    if (!projId) return;
+
+    const success = window.db.updateProject(projId, { status: targetStatus });
+    
+    if (success) {
+      this.render();
+      if (window.app && typeof window.app.updateViews === 'function') {
+        window.app.updateViews();
+      }
+    }
+
+    document.querySelectorAll('.kanban-col').forEach(col => {
+      col.classList.remove('drag-over');
+    });
+  }
+}
+
+// Bind kanban globally
+window.kanban = new KanbanBoard();
+
+</script>
