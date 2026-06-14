@@ -1,0 +1,266 @@
+﻿<script>
+/* Calendar Controller for Project Dashboard - English Version */
+
+class ProjectCalendar {
+  constructor() {
+    this.currentDate = new Date(2026, 5, 7); // June 7, 2026
+    this.englishMonths = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    this.englishDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  }
+
+  // Draw the calendar interface
+  render() {
+    const calendarTitle = document.getElementById('calendar-month-title');
+    const calendarDaysGrid = document.getElementById('calendar-grid-days');
+    if (!calendarDaysGrid || !calendarTitle) return;
+
+    const year = this.currentDate.getFullYear();
+    const month = this.currentDate.getMonth(); // 0-11
+
+    // Set title (Gregorian Calendar format)
+    calendarTitle.innerText = `${this.englishMonths[month]} ${year}`;
+
+    // Clear grid
+    calendarDaysGrid.innerHTML = '';
+
+    // Day headers
+    this.englishDays.forEach(day => {
+      const header = document.createElement('div');
+      header.className = 'calendar-day-name';
+      header.innerText = day;
+      calendarDaysGrid.appendChild(header);
+    });
+
+    // First day index
+    const firstDayIndex = new Date(year, month, 1).getDay();
+
+    // Total days in current month
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    // Fetch database holidays, projects, and notes
+    const holidays = window.db.getHolidays();
+    const projects = [...window.db.getProjects(), ...window.db.getAwardedProjects()];
+    const notes = window.db.getCalendarNotes ? window.db.getCalendarNotes() : [];
+
+    // Padding empty cells
+    for (let i = 0; i < firstDayIndex; i++) {
+      const emptyCell = document.createElement('div');
+      emptyCell.className = 'calendar-day empty';
+      calendarDaysGrid.appendChild(emptyCell);
+    }
+
+    // Today marker comparison
+    const today = new Date();
+    const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+    const todayDate = today.getDate();
+
+    // Populate calendar days
+    for (let dayNum = 1; dayNum <= totalDays; dayNum++) {
+      const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+      
+      const dayCell = document.createElement('div');
+      dayCell.className = 'calendar-day';
+      if (isCurrentMonth && dayNum === todayDate) {
+        dayCell.classList.add('today');
+      }
+
+      dayCell.innerHTML = `<span class="calendar-day-num">${dayNum}</span><div class="calendar-events"></div>`;
+      
+      const eventsContainer = dayCell.querySelector('.calendar-events');
+
+      // 1. Find holidays for this date
+      const dateHolidays = holidays.filter(h => h.date === dateString);
+      dateHolidays.forEach(h => {
+        const hEl = document.createElement('div');
+        hEl.className = 'calendar-event holiday';
+        hEl.title = `Holiday: ${h.name}`;
+        hEl.innerText = h.name;
+        eventsContainer.appendChild(hEl);
+      });
+
+      // 2. Find project deadlines for this date
+      const dateDeadlines = projects.filter(p => p.deadline === dateString);
+      dateDeadlines.forEach(p => {
+        const dEl = document.createElement('div');
+        dEl.className = 'calendar-event deadline';
+        dEl.title = `Deadline: ${p.name}`;
+        dEl.innerText = `${p.code} Due`;
+        eventsContainer.appendChild(dEl);
+      });
+
+      // 3. Find calendar notes for this date
+      const dateNotes = notes.filter(n => n.date === dateString);
+      dateNotes.forEach(n => {
+        const nEl = document.createElement('div');
+        nEl.className = 'calendar-event note';
+        nEl.title = `Note: ${n.note}`;
+        nEl.innerText = n.note;
+        eventsContainer.appendChild(nEl);
+      });
+
+      // Click handler
+      dayCell.addEventListener('click', () => this.handleDayClick(dateString, dateHolidays, dateDeadlines));
+
+      calendarDaysGrid.appendChild(dayCell);
+    }
+
+    // Upcoming Deadlines (Next 5 Days)
+    today.setHours(0, 0, 0, 0);
+    const upcomingDeadlinesList = document.getElementById('upcoming-deadlines-list');
+    if (upcomingDeadlinesList) {
+      upcomingDeadlinesList.innerHTML = '';
+      const next5Days = new Date(today);
+      next5Days.setDate(today.getDate() + 5);
+      
+      const upcomingProjects = projects.filter(p => {
+        if (!p.deadline) return false;
+        const dDate = new Date(p.deadline);
+        dDate.setHours(0, 0, 0, 0);
+        return dDate >= today && dDate <= next5Days;
+      });
+      
+      upcomingProjects.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+      
+      if (upcomingProjects.length === 0) {
+        upcomingDeadlinesList.innerHTML = '<div class="text-muted text-center py-3" style="font-size: 13px;">No deadlines in the next 5 days.</div>';
+      } else {
+        upcomingProjects.forEach(p => {
+          const item = document.createElement('div');
+          item.className = 'upcoming-deadline-item mb-2 p-2.5 rounded border border-danger-subtle';
+          item.style.background = 'rgba(239, 68, 68, 0.02)';
+          
+          const dDate = new Date(p.deadline);
+          dDate.setHours(0, 0, 0, 0);
+          const diffTime = dDate - today;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          let dayLabel = `${diffDays} days left`;
+          if (diffDays === 0) dayLabel = 'Today';
+          else if (diffDays === 1) dayLabel = 'Tomorrow';
+          
+          item.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="badge bg-danger" style="font-size: 9px; padding: 2px 6px;">${dayLabel}</span>
+              <small class="text-muted" style="font-size: 10px;">${window.app.formatDate(p.deadline)}</small>
+            </div>
+            <div class="fw-bold text-success text-truncate" style="cursor: pointer; font-size: 12px;" onclick="window.calendar.goToProject('${p.id}')">${p.code}: ${p.name}</div>
+          `;
+          upcomingDeadlinesList.appendChild(item);
+        });
+      }
+    }
+  }
+
+  prevMonth() {
+    this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+    this.render();
+  }
+
+  nextMonth() {
+    this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+    this.render();
+  }
+
+  // Action on calendar cell click
+  handleDayClick(dateStr, holidays, deadlines) {
+    const modalTitle = document.getElementById('calendarModalLabel');
+    const modalBody = document.getElementById('calendar-modal-body');
+    const inputDate = document.getElementById('new-holiday-date');
+
+    if (!modalTitle || !modalBody || !inputDate) return;
+
+    // Load existing calendar note if any
+    const dateNotes = (window.db.getCalendarNotes ? window.db.getCalendarNotes() : []).filter(n => n.date === dateStr);
+    const noteVal = dateNotes.length > 0 ? dateNotes[0].note : '';
+    const noteInput = document.getElementById('calendar-day-note-text');
+    if (noteInput) {
+      noteInput.value = noteVal;
+    }
+
+    // Date formatted as: dd/mm/yyyy
+    const formattedPopupDate = window.app.formatDate(dateStr);
+    modalTitle.innerText = `Details for ${formattedPopupDate}`;
+    inputDate.value = dateStr;
+
+    let htmlContent = '';
+
+    if (holidays.length > 0) {
+      htmlContent += `<h6 class="text-danger fw-bold"><i class="fas fa-umbrella-beach"></i> Company Holidays</h6><ul class="list-group mb-3">`;
+      holidays.forEach(h => {
+        htmlContent += `
+          <li class="list-group-item d-flex justify-content-between align-items-center py-2">
+            <span>${h.name}</span>
+            <button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="window.calendar.deleteHoliday('${h.id}')" title="Delete Holiday">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </li>
+        `;
+      });
+      htmlContent += `</ul>`;
+    }
+
+    if (deadlines.length > 0) {
+      htmlContent += `<h6 class="text-success fw-bold"><i class="fas fa-tasks"></i> Project Deliveries / Deadlines</h6><div class="list-group mb-3">`;
+      deadlines.forEach(p => {
+        // Systems summary
+        const systemsList = p.systems ? Object.keys(p.systems).join(', ') : 'None';
+        htmlContent += `
+          <div class="list-group-item list-group-item-action py-2" style="cursor:pointer;" onclick="window.calendar.goToProject('${p.id}')">
+            <div class="d-flex w-100 justify-content-between">
+              <span class="fw-bold text-success">${p.code}</span>
+              <small class="badge bg-success">${systemsList}</small>
+            </div>
+            <p class="mb-1" style="font-size: 13px;">${p.name}</p>
+          </div>
+        `;
+      });
+      htmlContent += `</div>`;
+    }
+
+    if (holidays.length === 0 && deadlines.length === 0) {
+      htmlContent += `<p class="text-muted text-center py-3">No holidays or project deadlines scheduled on this date.</p>`;
+    }
+
+    modalBody.innerHTML = htmlContent;
+
+    const myModal = new bootstrap.Modal(document.getElementById('calendarDayModal'));
+    myModal.show();
+  }
+
+  // Delete holiday
+  deleteHoliday(id) {
+    if (confirm('Are you sure you want to delete this company holiday?')) {
+      const success = window.db.deleteHoliday(id);
+      if (success) {
+        // Close modal
+        const modalEl = document.getElementById('calendarDayModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+        
+        // Refresh
+        this.render();
+        if (window.app && typeof window.app.renderSettingsHolidays === 'function') {
+          window.app.renderSettingsHolidays();
+        }
+      }
+    }
+  }
+
+  goToProject(projId) {
+    const modalEl = document.getElementById('calendarDayModal');
+    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+    if (modalInstance) modalInstance.hide();
+
+    if (window.app && typeof window.app.openEditProjectModal === 'function') {
+      window.app.openEditProjectModal(projId);
+    }
+  }
+}
+
+// Bind calendar globally
+window.calendar = new ProjectCalendar();
+
+</script>

@@ -1,0 +1,1258 @@
+﻿<style>
+/* Custom Stylesheet for Project Dashboard - Deep Green Theme */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --primary-rgb: 2, 87, 37;
+  --primary-color: #025725;
+  --primary-hover: #037233;
+  --primary-light: rgba(2, 87, 37, 0.1);
+  --bg-color: #f0f5f2;
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --card-border: rgba(2, 87, 37, 0.15);
+  --text-color: #0d1a12;
+  --text-muted: #536b5c;
+  
+  --sidebar-bg: #01240e;
+  --sidebar-hover: rgba(2, 87, 37, 0.2);
+  --sidebar-text: #ccdcd3;
+  --sidebar-active-bg: rgba(2, 87, 37, 0.35);
+  --sidebar-active-text: #ffffff;
+  
+  --shadow: 0 8px 32px 0 rgba(1, 36, 14, 0.05);
+  --glass-blur: 10px;
+  
+  --accent-orange: #d35400;
+  --accent-red: #c0392b;
+  --accent-blue: #2980b9;
+  --accent-green: #025725;
+  
+  --transition-speed: 0.3s;
+}
+
+[data-theme="dark"] {
+  --primary-rgb: 46, 204, 113;
+  --primary-color: #2ecc71;
+  --primary-hover: #2dd675;
+  --primary-light: rgba(46, 204, 113, 0.15);
+  --bg-color: #050d08;
+  --card-bg: rgba(9, 23, 15, 0.8);
+  --card-border: rgba(2, 87, 37, 0.3);
+  --text-color: #e2ece6;
+  --text-muted: #8ca395;
+  
+  --sidebar-bg: #010e05;
+  --sidebar-hover: rgba(46, 204, 113, 0.15);
+  --sidebar-text: #9abfa7;
+  --sidebar-active-bg: rgba(46, 204, 113, 0.25);
+  --sidebar-active-text: #2ecc71;
+  
+  --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-color);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(2, 87, 37, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
+
+/* Glassmorphism Cards */
+.glass-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow);
+  border-radius: 14px;
+  transition: transform var(--transition-speed) cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              box-shadow var(--transition-speed) ease, 
+              border var(--transition-speed) ease;
+}
+
+.glass-card.interactive:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px 0 rgba(2, 87, 37, 0.15);
+  border-color: rgba(2, 87, 37, 0.4);
+}
+
+/* Dashboard Layout */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Sidebar Styling */
+.sidebar {
+  width: 280px;
+  background-color: var(--sidebar-bg);
+  min-height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1000;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  transition: all var(--transition-speed) ease;
+}
+
+.sidebar-logo-container {
+  margin-top: -8px;
+  margin-bottom: 20px;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 80%);
+  border-radius: 8px;
+}
+
+.sidebar-logo {
+  max-width: 85%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  /* Sharp white outline to make text crisp, combined with a tight, subtle shadow */
+  filter: drop-shadow(1px 0 0 rgba(255, 255, 255, 0.95)) 
+          drop-shadow(-1px 0 0 rgba(255, 255, 255, 0.95)) 
+          drop-shadow(0 1px 0 rgba(255, 255, 255, 0.95)) 
+          drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.95)) 
+          drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+  transition: transform var(--transition-speed) ease, filter var(--transition-speed) ease;
+}
+
+.sidebar-logo:hover {
+  transform: scale(1.04);
+  filter: drop-shadow(1px 0 0 rgba(255, 255, 255, 1)) 
+          drop-shadow(-1px 0 0 rgba(255, 255, 255, 1)) 
+          drop-shadow(0 1px 0 rgba(255, 255, 255, 1)) 
+          drop-shadow(0 -1px 0 rgba(255, 255, 255, 1)) 
+          drop-shadow(0 3px 5px rgba(0, 0, 0, 0.5));
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  margin-bottom: 32px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.sidebar-brand i {
+  font-size: 24px;
+  color: #f59e0b;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+[data-theme="dark"] .sidebar-brand i {
+  color: #f59e0b;
+}
+
+.sidebar-brand span {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-menu {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-grow: 1;
+}
+
+.menu-item-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  color: var(--sidebar-text);
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+.menu-item-link i {
+  font-size: 18px;
+  width: 20px;
+  text-align: center;
+}
+
+.menu-item-link:hover {
+  background-color: var(--sidebar-hover);
+  color: #fff;
+}
+
+.menu-item-link.active {
+  background-color: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--primary-color);
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Main Content Area */
+.main-content {
+  flex-grow: 1;
+  margin-left: 280px;
+  padding: 32px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left var(--transition-speed) ease;
+}
+
+.content-body {
+  flex-grow: 1;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* SPA Pages switching animation */
+.spa-page {
+  display: none;
+  animation: fadeIn 0.4s ease-in-out forwards;
+}
+
+.spa-page.active {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Footer Styling */
+footer {
+  padding: 16px 0;
+  border-top: 1px solid var(--card-border);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Google Map Wrapper */
+.map-container {
+  height: 520px;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow);
+}
+
+/* Chart Styles */
+.chart-container {
+  position: relative;
+  height: 280px;
+  width: 100%;
+}
+
+/* Info Window on Map */
+.map-info-window {
+  color: #1a251f;
+  padding: 6px;
+  max-width: 260px;
+}
+.map-info-window h6 {
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--primary-hover);
+}
+.map-info-window p {
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+/* Kanban Board Styling */
+.kanban-board-container {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  align-items: flex-start;
+}
+
+.kanban-col {
+  flex: 1;
+  min-width: 270px;
+  max-width: 350px;
+  background: rgba(2, 87, 37, 0.03);
+  border: 1px dashed var(--card-border);
+  border-radius: 14px;
+  padding: 16px;
+  transition: all var(--transition-speed) ease;
+}
+
+[data-theme="dark"] .kanban-col {
+  background: rgba(9, 23, 15, 0.4);
+}
+
+.kanban-col.drag-over {
+  background: rgba(2, 87, 37, 0.08);
+  border-color: var(--primary-color);
+  border-style: solid;
+}
+
+.kanban-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.kanban-title {
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kanban-badge {
+  background: var(--primary-color);
+  color: #fff;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.kanban-cards-list {
+  min-height: 450px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kanban-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.kanban-card:active {
+  cursor: grabbing;
+}
+
+.kanban-card.dragging {
+  opacity: 0.5;
+  border: 1px dashed var(--primary-color);
+  transform: scale(0.98);
+}
+
+.kanban-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(2, 87, 37, 0.1);
+  border-color: rgba(2, 87, 37, 0.35);
+}
+
+.kanban-card-code {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-hover);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kanban-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 6px 0;
+  line-height: 1.4;
+}
+
+.kanban-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* Custom Status Colors for Kanban Column Headers */
+.kanban-col.standby .kanban-header { border-bottom-color: #7f8c8d; }
+.kanban-col.standby .kanban-badge { background: #7f8c8d; }
+.kanban-col.inprogress .kanban-header { border-bottom-color: var(--accent-orange); }
+.kanban-col.inprogress .kanban-badge { background: var(--accent-orange); }
+.kanban-col.complete .kanban-header { border-bottom-color: var(--accent-green); }
+.kanban-col.complete .kanban-badge { background: var(--accent-green); }
+.kanban-col.cancel .kanban-header { border-bottom-color: var(--accent-red); }
+.kanban-col.cancel .kanban-badge { background: var(--accent-red); }
+
+/* Kanban Card Deliverables & Stage styles */
+.kanban-del-unchecked {
+  background-color: rgba(239, 68, 68, 0.08) !important;
+  color: #ef4444 !important;
+  border: 1.2px solid rgba(239, 68, 68, 0.25) !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.kanban-del-unchecked:hover {
+  background-color: rgba(239, 68, 68, 0.16) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+.kanban-del-checked {
+  background-color: rgba(22, 163, 74, 0.08) !important;
+  color: #16a34a !important;
+  border: 1.2px solid rgba(22, 163, 74, 0.25) !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.kanban-del-checked:hover {
+  background-color: rgba(22, 163, 74, 0.16) !important;
+  border-color: rgba(22, 163, 74, 0.4) !important;
+}
+[data-theme="dark"] .kanban-del-unchecked {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+}
+[data-theme="dark"] .kanban-del-checked {
+  background-color: rgba(46, 204, 113, 0.15) !important;
+  color: #2ecc71 !important;
+  border-color: rgba(46, 204, 113, 0.35) !important;
+}
+.kanban-stage-select {
+  border: 1.2px solid #fef08a !important;
+  background-color: #fef9c3 !important;
+  color: #a16207 !important;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+.kanban-stage-select:hover {
+  border-color: #eab308 !important;
+  background-color: #fef08a !important;
+}
+[data-theme="dark"] .kanban-stage-select {
+  border: 1.2px solid #854d0e !important;
+  background-color: #422006 !important;
+  color: #fef08a !important;
+}
+[data-theme="dark"] .kanban-stage-select:hover {
+  border-color: #a16207 !important;
+  background-color: #713f12 !important;
+}
+
+/* Member Task Matrix Table */
+.member-task-table {
+  vertical-align: top;
+}
+.member-task-table th {
+  background: var(--sidebar-bg);
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+  border-color: var(--card-border);
+}
+
+/* Modern Clean Table for Regional Solar Capacity */
+.clean-modern-table {
+  border-collapse: collapse !important;
+  border: none !important;
+}
+.clean-modern-table th {
+  padding: 10px 8px !important;
+  font-weight: 600 !important;
+  border: none !important;
+  border-bottom: 2px solid var(--primary-color) !important;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  color: var(--primary-color) !important;
+  background-color: transparent !important;
+}
+.clean-modern-table td {
+  padding: 10px 8px !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+  font-size: 11px;
+  color: var(--text-color) !important;
+  background-color: transparent !important;
+}
+[data-theme="dark"] .clean-modern-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+.clean-modern-table tr:hover td {
+  background-color: rgba(var(--primary-rgb), 0.02) !important;
+}
+.clean-modern-table tr.total-row td {
+  font-weight: 700 !important;
+  color: var(--primary-color) !important;
+  border-top: 1.5px solid var(--primary-color) !important;
+  border-bottom: 1.5px solid var(--primary-color) !important;
+  background-color: rgba(var(--primary-rgb), 0.04) !important;
+}
+[data-theme="dark"] .clean-modern-table tr.total-row td {
+  color: var(--primary-color) !important;
+  border-top: 1.5px solid var(--primary-color) !important;
+  border-bottom: 1.5px solid var(--primary-color) !important;
+  background-color: rgba(var(--primary-rgb), 0.08) !important;
+}
+
+/* Stats item box styling under Doughnut Chart */
+.stats-item-box {
+  transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+.stats-item-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.08);
+  background: rgba(var(--primary-rgb), 0.03) !important;
+}
+
+.member-task-cell {
+  min-height: 140px;
+  background: rgba(255, 255, 255, 0.02);
+  vertical-align: top;
+  border-color: var(--card-border);
+}
+
+.member-project-chip {
+  display: block;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  font-size: 13px;
+  background: var(--card-bg);
+  border-left: 4px solid var(--primary-color);
+  border-top: 1px solid var(--card-border);
+  border-right: 1px solid var(--card-border);
+  border-bottom: 1px solid var(--card-border);
+  text-decoration: none;
+  color: var(--text-color);
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.member-project-chip:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 10px rgba(2, 87, 37, 0.1);
+  background: var(--card-bg);
+  color: var(--primary-hover);
+}
+
+/* Manhours Timesheet Styling */
+.manhours-table input[type="number"] {
+  border: 1px solid var(--card-border);
+  background: transparent;
+  color: var(--text-color);
+  text-align: center;
+  width: 60px;
+  border-radius: 4px;
+}
+.manhours-table input[type="number"]:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 5px rgba(2, 87, 37, 0.3);
+}
+
+/* Custom Calendar Grid styling */
+.calendar-wrapper {
+  user-select: none;
+}
+
+.calendar-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.calendar-day-name {
+  font-weight: 600;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.calendar-day {
+  min-height: 95px;
+  min-width: 0; /* Prevents grid column expansion from nowrap contents */
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.calendar-day.empty {
+  background: transparent;
+  border-color: transparent;
+}
+
+.calendar-day:not(.empty):hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(2, 87, 37, 0.08);
+  cursor: pointer;
+}
+
+.calendar-day-num {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.calendar-day.today .calendar-day-num {
+  color: var(--primary-color);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+[data-theme="dark"] .calendar-day.today .calendar-day-num {
+  color: var(--primary-hover);
+}
+
+.calendar-day.today {
+  border: 2px solid var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 5px rgba(2, 87, 37, 0.3);
+}
+
+.calendar-events {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 6px;
+  max-height: 60px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.calendar-event {
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.calendar-event.holiday {
+  background-color: var(--accent-red);
+}
+
+.calendar-event.deadline {
+  background-color: var(--primary-color);
+}
+
+.calendar-event.note {
+  background-color: #f97316 !important;
+  color: white !important;
+}
+
+[data-theme="dark"] .calendar-event.note {
+  background-color: #ea580c !important;
+  color: white !important;
+}
+
+/* System checklist capacity input CSS */
+.system-row-item {
+  background: rgba(2, 87, 37, 0.03);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background-color 0.2s ease;
+}
+
+.system-row-item:hover {
+  background: rgba(2, 87, 37, 0.06);
+}
+
+/* Mobile Bottom Navigation Bar */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: var(--sidebar-bg);
+  z-index: 1050;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.bottom-nav-menu {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  justify-content: space-around;
+}
+
+.bottom-nav-item {
+  flex: 1;
+}
+
+.bottom-nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 0;
+  color: var(--sidebar-text);
+  text-decoration: none;
+  font-size: 10px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.bottom-nav-link i {
+  font-size: 18px;
+}
+
+.bottom-nav-link:hover {
+  color: #fff;
+}
+
+.bottom-nav-link.active {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .bottom-nav-link.active {
+  color: var(--sidebar-active-text);
+}
+
+/* Toggle Theme Switch */
+.theme-switch-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 991.98px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+  
+  .main-content {
+    margin-left: 0;
+    padding: 16px;
+    padding-bottom: 80px; /* Space for bottom nav */
+  }
+  
+  .bottom-nav {
+    display: block;
+  }
+  
+  .map-container {
+    height: 400px;
+  }
+  
+  .calendar-day {
+    min-height: 70px;
+    padding: 4px;
+  }
+  
+  .calendar-day-num {
+    font-size: 12px;
+  }
+  
+  .calendar-event {
+    font-size: 8px;
+    padding: 1px 2px;
+  }
+}
+
+/* Custom Google Map Info Window Card */
+.map-card-container {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-color);
+  width: 440px;
+  max-width: 100%;
+}
+
+.map-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.map-card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--primary-color);
+}
+[data-theme="dark"] .map-card-title {
+  color: var(--primary-hover);
+}
+
+.map-card-btn {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.map-card-btn:hover {
+  background: #bae6fd;
+  color: #0369a1;
+}
+
+.map-card-divider {
+  border-top: 1px solid var(--card-border);
+  margin: 8px 0;
+}
+
+.map-card-body {
+  display: flex;
+  gap: 12px;
+}
+
+.map-card-img-box {
+  flex: 0 0 160px;
+  height: 105px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 87, 37, 0.03); /* Theme soft background */
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+}
+
+.map-card-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.map-card-caption {
+  font-size: 9px;
+  color: var(--text-muted);
+  margin-top: 3px;
+  font-style: italic;
+}
+
+.map-card-details {
+  flex-grow: 1;
+  font-size: 11px;
+}
+
+.map-card-row {
+  display: flex;
+  margin-bottom: 5px;
+}
+
+.map-card-label {
+  font-weight: 700;
+  width: 100px;
+  color: var(--text-muted);
+}
+
+.map-card-value {
+  font-weight: 500;
+}
+
+/* Weather Forecast Styling */
+.map-card-weather-title {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text-color);
+}
+
+.map-card-weather-grid {
+  display: flex;
+  gap: 6px;
+}
+
+.weather-day-box {
+  flex: 1;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  padding: 4px;
+  text-align: center;
+  font-size: 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--primary-rgb), 0.02);
+}
+
+.weather-day-box.today {
+  flex: 2.2;
+  flex-direction: row;
+  justify-content: space-between;
+  text-align: left;
+  background: rgba(2, 87, 37, 0.05);
+  border-color: var(--primary-color);
+  padding: 6px;
+}
+[data-theme="dark"] .weather-day-box.today {
+  background: rgba(46, 204, 113, 0.08);
+}
+
+.weather-today-left {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.weather-today-right {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.weather-today-temp {
+  font-size: 16px;
+  font-weight: 800;
+  font-family: 'Outfit', sans-serif;
+  color: var(--primary-color);
+  line-height: 1.1;
+  margin: 2px 0;
+}
+[data-theme="dark"] .weather-today-temp {
+  color: var(--primary-hover);
+}
+
+.weather-day-name {
+  font-weight: 700;
+}
+
+.weather-day-wind {
+  color: var(--text-muted);
+  font-size: 7.5px;
+}
+
+/* Deliverables Card Grid Styling */
+.deliverable-card {
+  transition: all 0.2s ease;
+}
+.deliverable-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 4px 10px rgba(var(--primary-rgb), 0.08);
+}
+
+/* Custom systems inputs */
+.system-row-item {
+  position: relative;
+}
+
+/* Award Details Modal Styling */
+#awardDetailsModal .modal-content {
+  background: var(--card-bg);
+  backdrop-filter: blur(15px);
+  color: var(--text-color);
+  border: 1px solid var(--card-border) !important;
+}
+
+#awardDetailsModal .form-control {
+  background-color: rgba(var(--primary-rgb), 0.015);
+  color: var(--text-color);
+  border-radius: 8px;
+}
+
+#awardDetailsModal .form-control:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25);
+}
+
+#awardDetailsModal .form-control::placeholder {
+  color: var(--text-muted);
+  opacity: 0.65;
+}
+
+[data-theme="dark"] #awardDetailsModal .form-control {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-color: var(--card-border);
+  color: #fff;
+}
+
+[data-theme="dark"] #awardDetailsModal .form-control:focus {
+  border-color: #2ecc71;
+  box-shadow: 0 0 0 0.25rem rgba(46, 204, 113, 0.25);
+}
+
+#awardDetailsModal .btn-close-white {
+  filter: invert(1) grayscale(1) brightness(2);
+}
+
+/* ================= V14: Project Pipeline Summary Cards ================= */
+.pipeline-card {
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100px;
+  box-shadow: var(--shadow);
+  transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+.pipeline-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+}
+.pipeline-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Outfit', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.pipeline-card-value {
+  font-size: 20px;
+  font-weight: 800;
+  font-family: 'Outfit', sans-serif;
+  line-height: 1.2;
+}
+.pipeline-card-subtext {
+  font-size: 11px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Light Theme Pipeline Cards */
+[data-theme="light"] .pipeline-card-total { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
+[data-theme="light"] .pipeline-card-rooftop { background: #fff7ed; color: #c2410c; border-color: #fed7aa; }
+[data-theme="light"] .pipeline-card-farm { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+[data-theme="light"] .pipeline-card-float { background: #ecfeff; color: #0e7490; border-color: #cffafe; }
+[data-theme="light"] .pipeline-card-carpark { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
+[data-theme="light"] .pipeline-card-bess { background: #faf5ff; color: #6b21a8; border-color: #e9d5ff; }
+
+/* Dark Theme Pipeline Cards */
+[data-theme="dark"] .pipeline-card-total { background: rgba(30, 64, 175, 0.25); color: #93c5fd; border-color: rgba(147, 197, 253, 0.3); }
+[data-theme="dark"] .pipeline-card-rooftop { background: rgba(194, 65, 12, 0.25); color: #fdba74; border-color: rgba(253, 186, 116, 0.3); }
+[data-theme="dark"] .pipeline-card-farm { background: rgba(21, 128, 61, 0.25); color: #86efac; border-color: rgba(134, 239, 172, 0.3); }
+[data-theme="dark"] .pipeline-card-float { background: rgba(14, 116, 144, 0.25); color: #67e8f9; border-color: rgba(103, 232, 249, 0.3); }
+[data-theme="dark"] .pipeline-card-carpark { background: rgba(71, 85, 105, 0.25); color: #cbd5e1; border-color: rgba(203, 213, 225, 0.3); }
+[data-theme="dark"] .pipeline-card-bess { background: rgba(107, 33, 168, 0.25); color: #d8b4fe; border-color: rgba(216, 180, 254, 0.3); }
+
+/* ================= V14: Timesheet Subtasks Layout ================= */
+.manhours-member-row td {
+  background-color: rgba(var(--primary-rgb), 0.04) !important;
+  font-weight: 700;
+  border-top: 1.5px solid var(--primary-color) !important;
+  border-bottom: 1.5px solid var(--primary-color) !important;
+}
+[data-theme="dark"] .manhours-member-row td {
+  background-color: rgba(var(--primary-rgb), 0.09) !important;
+}
+.manhours-subtask-row td {
+  font-size: 13px;
+  font-weight: normal;
+  border-bottom: 1px solid rgba(0,0,0,0.04) !important;
+}
+[data-theme="dark"] .manhours-subtask-row td {
+  border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+}
+.manhours-project-row td {
+  background-color: rgba(var(--primary-rgb), 0.01) !important;
+  border-bottom: 1px dashed rgba(var(--primary-rgb), 0.15) !important;
+}
+[data-theme="dark"] .manhours-project-row td {
+  background-color: rgba(255, 255, 255, 0.015) !important;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08) !important;
+}
+.manhours-project-row:hover td {
+  background-color: rgba(var(--primary-rgb), 0.025) !important;
+}
+.manhours-subtask-indent {
+  padding-left: 28px !important;
+  color: var(--text-color);
+  font-weight: 500;
+}
+.manhours-subtask-row:hover td {
+  background-color: rgba(var(--primary-rgb), 0.015) !important;
+}
+.manhour-input {
+  transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+.manhour-input:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.15) !important;
+}
+
+/* Pulse animation for urgent upcoming tasks */
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.03); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Award Details Popup Styling */
+.map-card-award-title {
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 10px;
+  margin-bottom: 6px;
+  color: var(--text-color);
+}
+
+.map-card-award-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+  background: rgba(211, 84, 0, 0.05);
+  border: 1px solid rgba(211, 84, 0, 0.15);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 11px;
+}
+
+[data-theme="dark"] .map-card-award-grid {
+  background: rgba(211, 84, 0, 0.08);
+  border-color: rgba(211, 84, 0, 0.25);
+}
+
+.award-detail-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.award-detail-label {
+  font-weight: 700;
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 1px;
+}
+
+.award-detail-value {
+  font-weight: 600;
+  color: var(--text-color);
+  word-break: break-all;
+}
+
+/* Delete Project Button Styling */
+.delete-project-btn {
+  color: var(--accent-red);
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.delete-project-btn:hover {
+  background: rgba(192, 57, 43, 0.1) !important;
+  color: #c0392b !important;
+}
+
+/* Kanban Card Status Colors */
+.kanban-card.status-completed {
+  background-color: rgba(240, 253, 250, 0.9) !important;
+  border: 1px solid #10b981 !important;
+}
+[data-theme="dark"] .kanban-card.status-completed {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid #10b981 !important;
+}
+.kanban-card.status-incomplete {
+  background-color: rgba(254, 242, 242, 0.9) !important;
+  border: 1px solid #ef4444 !important;
+}
+[data-theme="dark"] .kanban-card.status-incomplete {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  border: 1px solid #ef4444 !important;
+}
+
+</style>

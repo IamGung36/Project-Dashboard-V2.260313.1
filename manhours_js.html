@@ -1,0 +1,312 @@
+﻿<script>
+/* Manhours Tracker Controller for Project Dashboard - English Version */
+
+class ManhoursTracker {
+  constructor() {
+    this.currentWeekStart = this.getMonday(new Date(2026, 5, 1)); // June 1, 2026
+    this.expandedMembers = {};
+    this.expandedProjects = {};
+  }
+
+  // Get Monday of the week containing the given date
+  getMonday(d) {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(date.setDate(diff));
+  }
+
+  toggleMember(memberId) {
+    this.expandedMembers[memberId] = this.expandedMembers[memberId] === false ? true : false;
+    this.render();
+  }
+
+  toggleProject(memberId, projectId) {
+    const key = `${memberId}-${projectId}`;
+    this.expandedProjects[key] = this.expandedProjects[key] === false ? true : false;
+    this.render();
+  }
+
+  // Render the Manhours sheet
+  render() {
+    const weekLabel = document.getElementById('manhours-week-range');
+    const tableHeader = document.getElementById('manhours-table-header');
+    const tableBody = document.getElementById('manhours-table-body');
+
+    if (!tableBody || !tableHeader || !weekLabel) return;
+
+    // Date range display
+    const days = [];
+    const engDaysShort = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const engMonthShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(this.currentWeekStart);
+      d.setDate(this.currentWeekStart.getDate() + i);
+      days.push(d);
+    }
+
+    const startStr = `${days[0].getDate()} ${engMonthShort[days[0].getMonth()]} ${days[0].getFullYear()}`;
+    const endStr = `${days[6].getDate()} ${engMonthShort[days[6].getMonth()]} ${days[6].getFullYear()}`;
+    weekLabel.innerText = `Week: ${startStr} - ${endStr}`;
+
+    // Build Table Header
+    let headerHtml = `
+      <th>Member / Project / Task</th>
+    `;
+    days.forEach((day, index) => {
+      const dateFormatted = `${day.getDate()} ${engMonthShort[day.getMonth()]}`;
+      headerHtml += `
+        <th class="text-center">
+          ${engDaysShort[index]}<br>
+          <small class="text-muted" style="font-size: 11px;">(${dateFormatted})</small>
+        </th>
+      `;
+    });
+    headerHtml += `<th class="text-center table-success text-dark">Weekly Total</th>`;
+    tableHeader.innerHTML = headerHtml;
+
+    // Fetch members and projects
+    const members = window.db.getMembers();
+    const projects = [...window.db.getProjects(), ...window.db.getAwardedProjects()];
+    const manhourLogs = window.db.getManhours();
+    const weekDaysStr = days.map(d => d.toISOString().split('T')[0]);
+    
+    tableBody.innerHTML = '';
+
+    if (members.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-muted">Please add members in Settings to track manhours.</td></tr>`;
+      return;
+    }
+
+    members.forEach(member => {
+      // 1. Group active tasks/deliverables by project for this member
+      const memberProjects = projects.filter(p => p.engineer === member.id);
+      const projectMap = {};
+      
+      // Add standard projects and their deliverables
+      memberProjects.forEach(proj => {
+        projectMap[proj.id] = {
+          project: proj,
+          deliverables: (Array.isArray(proj.deliverables) ? proj.deliverables : []).map(d => d.name)
+        };
+      });
+
+      // Add any other logged project-deliverable combinations in the current week
+      const memberWeekLogs = manhourLogs.filter(l => l.memberId === member.id && weekDaysStr.includes(l.date));
+      memberWeekLogs.forEach(log => {
+        if (!projectMap[log.projectId]) {
+          const proj = projects.find(p => p.id === log.projectId);
+          projectMap[log.projectId] = {
+            project: proj || { id: log.projectId, code: 'Global', name: 'Global Tasks' },
+            deliverables: []
+          };
+        }
+        const delName = log.deliverableName || 'General Tasks';
+        if (!projectMap[log.projectId].deliverables.includes(delName)) {
+          projectMap[log.projectId].deliverables.push(delName);
+        }
+      });
+
+      // 2. Render Member Header Row (Level 1)
+      const isMemberExpanded = this.expandedMembers[member.id] !== false;
+      const memberRow = document.createElement('tr');
+      memberRow.className = 'manhours-member-row';
+
+      let memberInfoHtml = `
+        <td>
+          <div class="d-flex align-items-center gap-2 cursor-pointer" onclick="window.manhours.toggleMember('${member.id}')">
+            <i class="fas ${isMemberExpanded ? 'fa-chevron-down' : 'fa-chevron-right'} text-success" style="width: 12px;"></i>
+            <div>
+              <span class="fw-bold">${member.name}</span>
+              <span class="badge bg-light text-dark border ms-1" style="font-size: 9px; font-weight: normal; padding: 2px 4px;">${member.role}</span>
+            </div>
+          </div>
+        </td>
+      `;
+
+      let memberDailySumsHtml = '';
+      let memberWeeklySum = 0;
+
+      days.forEach(day => {
+        const dayStr = day.toISOString().split('T')[0];
+        const dayHours = memberWeekLogs.filter(l => l.date === dayStr).reduce((sum, l) => sum + l.hours, 0);
+        memberWeeklySum += dayHours;
+        memberDailySumsHtml += `
+          <td class="text-center align-middle" id="sum-${member.id}-${dayStr}">
+            ${dayHours > 0 ? dayHours.toFixed(1) : '-'}
+          </td>
+        `;
+      });
+
+      memberRow.innerHTML = `
+        ${memberInfoHtml}
+        ${memberDailySumsHtml}
+        <td class="text-center align-middle table-success text-dark fw-bold" id="total-${member.id}">
+          ${memberWeeklySum.toFixed(1)} hrs
+        </td>
+      `;
+      tableBody.appendChild(memberRow);
+
+      // 3. Render Projects & Subtasks
+      Object.values(projectMap).forEach(projItem => {
+        const project = projItem.project;
+        const dels = projItem.deliverables;
+        const projKey = `${member.id}-${project.id}`;
+        const isProjExpanded = this.expandedProjects[projKey] !== false;
+
+        // Render Project Row (Level 2)
+        const projectRow = document.createElement('tr');
+        projectRow.className = 'manhours-project-row' + (isMemberExpanded ? '' : ' d-none');
+
+        let projectInfoHtml = `
+          <td>
+            <div class="d-flex align-items-center gap-2 cursor-pointer ps-3" onclick="window.manhours.toggleProject('${member.id}', '${project.id}')">
+              <i class="fas ${isProjExpanded ? 'fa-chevron-down' : 'fa-chevron-right'} text-primary" style="width: 10px; font-size: 10px;"></i>
+              <span class="fw-semibold text-primary" style="font-size: 12.5px;">[${project.code}] ${project.name}</span>
+            </div>
+          </td>
+        `;
+
+        let projectDailySumsHtml = '';
+        let projectWeeklySum = 0;
+
+        days.forEach(day => {
+          const dayStr = day.toISOString().split('T')[0];
+          const projDayHours = memberWeekLogs
+            .filter(l => l.projectId === project.id && l.date === dayStr)
+            .reduce((sum, l) => sum + l.hours, 0);
+          projectWeeklySum += projDayHours;
+          projectDailySumsHtml += `
+            <td class="text-center align-middle text-primary fw-semibold" style="font-size: 12px;">
+              ${projDayHours > 0 ? projDayHours.toFixed(1) : '-'}
+            </td>
+          `;
+        });
+
+        projectRow.innerHTML = `
+          ${projectInfoHtml}
+          ${projectDailySumsHtml}
+          <td class="text-center align-middle text-primary fw-bold" style="font-size: 12px;">
+            ${projectWeeklySum.toFixed(1)}
+          </td>
+        `;
+        tableBody.appendChild(projectRow);
+
+        // Render Task Rows (Level 3)
+        const isTaskRowVisible = isMemberExpanded && isProjExpanded;
+
+        dels.forEach(delName => {
+          const subtaskRow = document.createElement('tr');
+          subtaskRow.className = 'manhours-subtask-row' + (isTaskRowVisible ? '' : ' d-none');
+
+          let subtaskInfoHtml = `
+            <td class="manhours-subtask-indent">
+              <div class="d-flex align-items-center gap-2" style="padding-left: 24px;">
+                <i class="fas fa-tasks text-muted" style="font-size: 9px; opacity: 0.7;"></i>
+                <span class="text-muted" style="font-size: 11.5px;">${delName}</span>
+              </div>
+            </td>
+          `;
+
+          let subtaskInputsHtml = '';
+          let subtaskWeeklySum = 0;
+
+          // Find the deliverable hours in project deliverables
+          const projDel = (Array.isArray(project.deliverables) ? project.deliverables : []).find(d => d.name === delName);
+          const defaultHours = projDel && typeof projDel.hours === 'number' ? projDel.hours : 0;
+
+          days.forEach(day => {
+            const dayStr = day.toISOString().split('T')[0];
+            const log = memberWeekLogs.find(l => l.projectId === project.id && (l.deliverableName || '') === delName && l.date === dayStr);
+            const logHours = log ? log.hours : 0;
+            subtaskWeeklySum += logHours;
+
+            subtaskInputsHtml += `
+              <td class="text-center align-middle">
+                <input 
+                  type="number" 
+                  class="form-control form-control-sm mx-auto text-center manhour-input" 
+                  style="max-width: 60px; background: transparent; border-color: var(--card-border); font-size: 12px;" 
+                  min="0" 
+                  max="24" 
+                  step="0.5" 
+                  value="${logHours > 0 ? logHours : ''}" 
+                  placeholder="${defaultHours}"
+                  data-member-id="${member.id}" 
+                  data-project-id="${project.id}"
+                  data-deliverable-name="${delName}"
+                  data-date="${dayStr}"
+                  onchange="window.manhours.handleHoursChange(this)"
+                >
+              </td>
+            `;
+          });
+
+          subtaskRow.innerHTML = `
+            ${subtaskInfoHtml}
+            ${subtaskInputsHtml}
+            <td class="text-center align-middle fw-bold text-muted" style="font-size: 12px;">
+              ${subtaskWeeklySum > 0 ? subtaskWeeklySum.toFixed(1) : '-'}
+            </td>
+          `;
+          tableBody.appendChild(subtaskRow);
+        });
+      });
+    });
+
+    // 4. Add row for Daily Totals
+    const totalRow = document.createElement('tr');
+    totalRow.className = 'table-light fw-bold';
+    let totalRowHtml = `<td>Daily Sum</td>`;
+    
+    let grandTotal = 0;
+    days.forEach(day => {
+      const dayStr = day.toISOString().split('T')[0];
+      const dailySum = manhourLogs
+        .filter(l => l.date === dayStr)
+        .reduce((sum, l) => sum + l.hours, 0);
+      grandTotal += dailySum;
+      totalRowHtml += `<td class="text-center">${dailySum > 0 ? dailySum.toFixed(1) : '-'}</td>`;
+    });
+    totalRowHtml += `<td class="text-center table-success text-dark">${grandTotal.toFixed(1)} hrs</td>`;
+    totalRow.innerHTML = totalRowHtml;
+    tableBody.appendChild(totalRow);
+  }
+
+  nextWeek() {
+    this.currentWeekStart.setDate(this.currentWeekStart.getDate() + 7);
+    this.render();
+  }
+
+  prevWeek() {
+    this.currentWeekStart.setDate(this.currentWeekStart.getDate() - 7);
+    this.render();
+  }
+
+  handleHoursChange(input) {
+    const memberId = input.getAttribute('data-member-id');
+    const projectId = input.getAttribute('data-project-id');
+    const deliverableName = input.getAttribute('data-deliverable-name');
+    const dateStr = input.getAttribute('data-date');
+    const val = parseFloat(input.value) || 0;
+
+    if (val < 0 || val > 24) {
+      alert('Manhours must be between 0 and 24 hours per day.');
+      input.value = '';
+      return;
+    }
+
+    window.db.saveManhour(memberId, dateStr, val, projectId, deliverableName);
+    this.render();
+    
+    if (window.app && typeof window.app.updateViews === 'function') {
+      window.app.updateViews();
+    }
+  }
+}
+
+// Bind manhours globally
+window.manhours = new ManhoursTracker();
+
+</script>
