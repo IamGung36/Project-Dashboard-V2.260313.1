@@ -302,15 +302,16 @@ class LocalDatabase {
         console.log('Skipping real-time sync: save in progress');
         return;
       }
-      if (this.lastSaveTime && (Date.now() - this.lastSaveTime < 15000)) {
+      if (this.lastSaveTime && (Date.now() - this.lastSaveTime < 10000)) {
         console.log('Skipping real-time sync: within cooldown period after save');
         return;
       }
       
       const gasUrl = this.getGasUrl();
       if (gasUrl) {
-        const url = gasUrl.indexOf('?') !== -1 ? `${gasUrl}&action=get` : `${gasUrl}?action=get`;
-        fetch(url)
+        const cacheBuster = `&_t=${Date.now()}`;
+        const url = gasUrl.indexOf('?') !== -1 ? `${gasUrl}&action=get${cacheBuster}` : `${gasUrl}?action=get${cacheBuster}`;
+        fetch(url, { cache: 'no-store' })
           .then(res => {
             if (!res.ok) throw new Error(`HTTP error ${res.status}`);
             return res.json();
@@ -334,7 +335,7 @@ class LocalDatabase {
             console.error('Real-time sync fetch failed:', e);
           });
       }
-    }, 15000); // Sync every 15 seconds
+    }, 10000); // Sync every 10 seconds
   }
 
   // Initial load
@@ -476,8 +477,9 @@ class LocalDatabase {
   }
 
   fetchFromServer(gasUrl, force = false) {
-    const url = gasUrl.indexOf('?') !== -1 ? `${gasUrl}&action=get` : `${gasUrl}?action=get`;
-    return fetch(url)
+    const cacheBuster = `&_t=${Date.now()}`;
+    const url = gasUrl.indexOf('?') !== -1 ? `${gasUrl}&action=get${cacheBuster}` : `${gasUrl}?action=get${cacheBuster}`;
+    return fetch(url, { cache: 'no-store' })
       .then(res => {
         if (!res.ok) throw new Error(`HTTP error ${res.status}`);
         return res.json();
